@@ -124,3 +124,28 @@ def cmd_rm(args):
         return 4
     print(f"cubby: secret '{args.name}' removed from namespace '{ns}'")
     return 0
+
+
+def _env_var_name(secret_name: str) -> str:
+    return "CUBBY_" + secret_name.upper().replace("-", "_")
+
+
+def cmd_run(args):
+    home, cfg, ns, _ = _resolve(args)
+    command = args.command
+    if command and command[0] == "--":
+        command = command[1:]
+    if not command:
+        print("cubby run: no command given (usage: cubby run -- <cmd>)", file=sys.stderr)
+        return 2
+    identity = keyring.load_identity(home, cfg.key_mode)
+    values = store.read_values(home, ns, identity)
+    env_map = cfg.namespaces.get(ns, config.Namespace()).env_map
+    child_env = dict(os.environ)
+    for name, value in values.items():
+        child_env[env_map.get(name, _env_var_name(name))] = value
+    try:
+        os.execvpe(command[0], command, child_env)
+    except FileNotFoundError:
+        print(f"cubby run: command not found: {command[0]}", file=sys.stderr)
+        return 2

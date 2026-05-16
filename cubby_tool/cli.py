@@ -45,6 +45,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_rm.add_argument("-n", "--namespace", default=None)
     p_rm.set_defaults(func=commands.cmd_rm)
 
+    p_run = sub.add_parser("run", help="run a command with namespace secrets in its env")
+    p_run.add_argument("-n", "--namespace", default=None)
+    p_run.add_argument("command", nargs=argparse.REMAINDER)
+    p_run.set_defaults(func=commands.cmd_run)
+
     return parser
 
 
