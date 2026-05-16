@@ -1,7 +1,8 @@
+import getpass
 import os
 import sys
 
-from cubby_tool import config, keyring
+from cubby_tool import config, keyring, store
 
 
 def _resolve(args):
@@ -70,4 +71,56 @@ def cmd_init(args):
     )
     config.save_config(home, cfg)
     print(f"cubby: initialized at {home} (namespace '{ns_name}', key mode '{args.key_mode}')")
+    return 0
+
+
+def cmd_set(args):
+    home, cfg, ns, _ = _resolve(args)
+    identity = keyring.load_identity(home, cfg.key_mode)
+    recipient = keyring.public_key(identity)
+    if args.stdin:
+        value = sys.stdin.read().rstrip("\n")
+    else:
+        value = getpass.getpass(f"value for '{args.name}': ")
+    store.set_secret(home, ns, args.name, value, identity, recipient)
+    print(f"cubby: secret '{args.name}' set in namespace '{ns}'")
+    return 0
+
+
+def cmd_get(args):
+    home, cfg, ns, _ = _resolve(args)
+    identity = keyring.load_identity(home, cfg.key_mode)
+    entries = store.read_entries(home, ns, identity)
+    if args.name not in entries:
+        print(f"cubby: secret '{args.name}' not found in namespace '{ns}'", file=sys.stderr)
+        return 4
+    entry = entries[args.name]
+    if args.reveal:
+        print("WARNING: revealing secret plaintext to stdout", file=sys.stderr)
+        print(entry["value"])
+    else:
+        print(f"name: {args.name}")
+        print(f"namespace: {ns}")
+        print(f"length: {len(entry['value'])}")
+        print(f"updated: {entry.get('updated', '-')}")
+    return 0
+
+
+def cmd_list(args):
+    home, cfg, ns, _ = _resolve(args)
+    identity = keyring.load_identity(home, cfg.key_mode)
+    for name in store.list_names(home, ns, identity):
+        print(name)
+    return 0
+
+
+def cmd_rm(args):
+    home, cfg, ns, _ = _resolve(args)
+    identity = keyring.load_identity(home, cfg.key_mode)
+    recipient = keyring.public_key(identity)
+    existed = store.delete_secret(home, ns, args.name, identity, recipient)
+    if not existed:
+        print(f"cubby: secret '{args.name}' not found in namespace '{ns}'", file=sys.stderr)
+        return 4
+    print(f"cubby: secret '{args.name}' removed from namespace '{ns}'")
     return 0
