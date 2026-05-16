@@ -1,0 +1,13 @@
+{
+  "name": "cubby",
+  "owner": {
+    "name": "cubby"
+  },
+  "plugins": [
+    {
+      "name": "cubby",
+      "source": "./plugin",
+      "description": "Namespaced encrypted secret store — lets Claude use secrets without their values entering its context."
+    }
+  ]
+}
