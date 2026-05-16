@@ -54,3 +54,24 @@ def save_config(home: Path, cfg: Config) -> None:
         },
     }
     config_path(home).write_text(json.dumps(data, indent=2) + "\n")
+
+
+def resolve_namespace(cfg: Config, *, flag=None, env=None, cwd=None):
+    """Return (namespace_name, reason). reason: flag|env|cwd|default."""
+    if flag:
+        return flag, "flag"
+    if env:
+        return env, "env"
+    if cwd:
+        matches = [
+            (name, ns.cwd_prefix)
+            for name, ns in cfg.namespaces.items()
+            if ns.cwd_prefix
+            and (cwd == ns.cwd_prefix or cwd.startswith(ns.cwd_prefix.rstrip("/") + "/"))
+        ]
+        if matches:
+            name, _ = max(matches, key=lambda m: len(m[1]))
+            return name, "cwd"
+    if cfg.default_namespace:
+        return cfg.default_namespace, "default"
+    raise LookupError("no namespace could be resolved")
