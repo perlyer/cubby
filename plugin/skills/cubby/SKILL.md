@@ -22,15 +22,15 @@ description: Use when a task needs a password, API token, or connection string â
 
 Connect to a database without seeing the password:
 ```
-cubby run -n nord -- psql -h 127.0.0.1 -p 5433 -U nord_admin -d nord_database
+cubby run -n work -- psql -h 127.0.0.1 -p 5432 -U appuser -d appdb
 ```
 
 Check a secret exists (no value shown):
 ```
-cubby get clickup-token -n nord
+cubby get api-token -n work
 ```
 
 List secret names in a namespace:
 ```
-cubby list -n nord
+cubby list -n work
 ```

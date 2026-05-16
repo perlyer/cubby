@@ -21,12 +21,12 @@ unlocks automatically at login. Default `--key-mode file` keeps it in
 
 ## Namespaces
 
-A namespace is a workspace/environment (`nord`, `1xdev`, …). The active namespace is
+A namespace is a workspace/environment (`work`, `personal`, …). The active namespace is
 resolved per command: `-n <name>` flag → `$CUBBY_NS` → working-directory prefix match →
 default.
 
 ```bash
-cubby ns add nord --cwd-prefix /Users/me/Projects/Nord
+cubby ns add work --cwd-prefix ~/projects/work
 cubby ns                  # show active namespace and why
 ```
 

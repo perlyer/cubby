@@ -12,16 +12,16 @@ def test_load_missing_config_returns_defaults(tmp_path):
 
 def test_save_then_load_roundtrip(tmp_path):
     cfg = config.Config(
-        default_namespace="nord",
+        default_namespace="acme",
         key_mode="keychain",
-        namespaces={"nord": config.Namespace(cwd_prefix="/p/Nord", env_map={"db": "PGPASSWORD"})},
+        namespaces={"acme": config.Namespace(cwd_prefix="/p/acme", env_map={"db": "PGPASSWORD"})},
     )
     config.save_config(tmp_path, cfg)
     loaded = config.load_config(tmp_path)
-    assert loaded.default_namespace == "nord"
+    assert loaded.default_namespace == "acme"
     assert loaded.key_mode == "keychain"
-    assert loaded.namespaces["nord"].cwd_prefix == "/p/Nord"
-    assert loaded.namespaces["nord"].env_map == {"db": "PGPASSWORD"}
+    assert loaded.namespaces["acme"].cwd_prefix == "/p/acme"
+    assert loaded.namespaces["acme"].env_map == {"db": "PGPASSWORD"}
 
 
 def test_get_home_honors_env(tmp_path, monkeypatch):
@@ -31,32 +31,32 @@ def test_get_home_honors_env(tmp_path, monkeypatch):
 
 def _cfg():
     return config.Config(
-        default_namespace="nord",
+        default_namespace="acme",
         namespaces={
-            "nord": config.Namespace(cwd_prefix="/p/Nord"),
-            "deep": config.Namespace(cwd_prefix="/p/Nord/sub"),
+            "acme": config.Namespace(cwd_prefix="/p/acme"),
+            "deep": config.Namespace(cwd_prefix="/p/acme/sub"),
         },
     )
 
 
 def test_resolve_prefers_flag():
-    assert config.resolve_namespace(_cfg(), flag="x", env="y", cwd="/p/Nord") == ("x", "flag")
+    assert config.resolve_namespace(_cfg(), flag="x", env="y", cwd="/p/acme") == ("x", "flag")
 
 
 def test_resolve_uses_env_when_no_flag():
-    assert config.resolve_namespace(_cfg(), flag=None, env="y", cwd="/p/Nord") == ("y", "env")
+    assert config.resolve_namespace(_cfg(), flag=None, env="y", cwd="/p/acme") == ("y", "env")
 
 
 def test_resolve_uses_longest_cwd_prefix():
-    assert config.resolve_namespace(_cfg(), cwd="/p/Nord/sub/x") == ("deep", "cwd")
+    assert config.resolve_namespace(_cfg(), cwd="/p/acme/sub/x") == ("deep", "cwd")
 
 
 def test_resolve_falls_back_to_default():
-    assert config.resolve_namespace(_cfg(), cwd="/elsewhere") == ("nord", "default")
+    assert config.resolve_namespace(_cfg(), cwd="/elsewhere") == ("acme", "default")
 
 
 def test_resolve_does_not_match_sibling_prefix():
-    assert config.resolve_namespace(_cfg(), cwd="/p/Nordics/project") == ("nord", "default")
+    assert config.resolve_namespace(_cfg(), cwd="/p/acme-corp/project") == ("acme", "default")
 
 
 def test_resolve_raises_when_nothing_matches():
