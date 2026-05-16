@@ -5,7 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from cubby_tool import config, keyring, store
+from cubby_tool import agents, config, keyring, store
 
 
 def _resolve(args):
@@ -200,3 +200,27 @@ def cmd_import(args):
         store.set_secret(home, ns, name, str(value), identity, recipient)
     print(f"cubby: imported {len(pairs)} secret(s) into namespace '{ns}'")
     return 0
+
+
+def cmd_agent(args):
+    if args.agent_cmd is None:
+        print("usage: cubby agent {list|add|rm}", file=sys.stderr)
+        return 2
+    if args.agent_cmd == "list":
+        for name in agents.names():
+            print(f"{name}\t{agents.ADAPTERS[name].status()}")
+        return 0
+    adapter = agents.get(args.name)
+    if adapter is None:
+        print(f"cubby: unknown agent '{args.name}' (see `cubby agent list`)", file=sys.stderr)
+        return 4
+    if args.agent_cmd == "add":
+        adapter.install()
+        print(f"cubby: integration installed for {adapter.name}")
+        return 0
+    if args.agent_cmd == "rm":
+        adapter.uninstall()
+        print(f"cubby: integration removed for {adapter.name}")
+        return 0
+    print("usage: cubby agent {list|add|rm}", file=sys.stderr)
+    return 2

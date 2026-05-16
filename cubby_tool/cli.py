@@ -60,6 +60,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_import.add_argument("--region", default=None)
     p_import.set_defaults(func=commands.cmd_import)
 
+    p_agent = sub.add_parser("agent", help="manage agent integrations")
+    p_agent.set_defaults(func=commands.cmd_agent, agent_cmd=None)
+    agent_sub = p_agent.add_subparsers(dest="agent_cmd")
+    agent_sub.add_parser("list", help="list agent adapters and their status")
+    p_agent_add = agent_sub.add_parser("add", help="install integration for an agent")
+    p_agent_add.add_argument("name")
+    p_agent_rm = agent_sub.add_parser("rm", help="remove integration for an agent")
+    p_agent_rm.add_argument("name")
+
     return parser
 
 
