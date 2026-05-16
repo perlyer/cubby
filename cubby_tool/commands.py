@@ -1,7 +1,7 @@
 import os
 import sys
 
-from cubby_tool import config
+from cubby_tool import config, keyring
 
 
 def _resolve(args):
@@ -52,4 +52,22 @@ def cmd_ns(args):
         print("cubby: no namespace resolved (run `cubby ns add`)", file=sys.stderr)
         return 4
     print(f"active namespace: {ns} (resolved via: {reason})")
+    return 0
+
+
+def cmd_init(args):
+    home = config.get_home()
+    if config.config_path(home).exists():
+        print("cubby: already initialized (delete the config dir to re-init)", file=sys.stderr)
+        return 4
+    identity_text, _ = keyring.generate_identity()
+    keyring.store_identity(home, identity_text, args.key_mode)
+    ns_name = args.namespace or "default"
+    cfg = config.Config(
+        default_namespace=ns_name,
+        key_mode=args.key_mode,
+        namespaces={ns_name: config.Namespace(cwd_prefix=args.cwd_prefix, env_map={})},
+    )
+    config.save_config(home, cfg)
+    print(f"cubby: initialized at {home} (namespace '{ns_name}', key mode '{args.key_mode}')")
     return 0
