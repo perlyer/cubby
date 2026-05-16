@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from cubby_tool.agents.claude_code import SKILL
+from cubby_tool.agents.claude_code import COMMAND, SKILL
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -15,6 +15,11 @@ def test_marketplace_manifest_is_valid_json():
 def test_static_skill_matches_adapter_output():
     static = (REPO_ROOT / "plugin" / "skills" / "cubby" / "SKILL.md").read_text()
     assert static == SKILL
+
+
+def test_static_command_matches_adapter_output():
+    static = (REPO_ROOT / "plugin" / "commands" / "cubby.md").read_text()
+    assert static == COMMAND
 
 
 def test_settings_snippet_is_removed():
