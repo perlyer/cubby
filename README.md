@@ -9,15 +9,19 @@ agent references a secret by name, `cubby` injects it into a child process's env
 ## Install
 
 ```bash
-brew install age          # required: age + age-keygen
-git clone <repo-url> cubby
-ln -s "$PWD/cubby/cubby" ~/.local/bin/cubby   # put `cubby` on PATH
-cubby init                # creates ~/.config/cubby, generates an age key
+brew install age          # required: age + age-keygen (Linux: github.com/FiloSottile/age/releases)
+git clone <repo-url> cubby && cd cubby && ./install.sh
 ```
 
-`cubby init --key-mode keychain` (macOS) stores the age key in the login Keychain so it
-unlocks automatically at login. Default `--key-mode file` keeps it in
-`~/.config/cubby/identity` (0600).
+`install.sh` puts `cubby` on your PATH, runs `cubby init`, and offers to install the
+integration into any AI coding agents it finds. Non-interactive:
+
+```bash
+./install.sh --key-mode keychain --agent claude-code,codex
+```
+
+`--key-mode keychain` (macOS) stores the age key in the login Keychain so it unlocks
+automatically at login; default `--key-mode file` keeps it in `~/.config/cubby/identity` (0600).
 
 ## Namespaces
 
@@ -45,8 +49,22 @@ cubby import --from-env .env        # bulk import; also --from-aws <secret-id>
 
 `cubby get <name> --reveal` prints plaintext — for human use only.
 
-## Claude Code integration
+## Agent integration
 
-Install the plugin in `plugin/` (skill + `/cubby` command), and merge
-`docs/settings-snippet.json` into your `settings.json` so `cubby run/get/list/ns` run
-without prompts while `--reveal` stays blocked.
+`cubby agent` installs a small integration (a skill / instructions file, plus permissions
+where supported) so an agent uses `cubby run` for secrets instead of reading plaintext.
+
+```bash
+cubby agent list                 # adapters and their status
+cubby agent add claude-code      # install integration for one agent
+cubby agent rm claude-code       # remove it
+```
+
+Supported agents: `claude-code`, `codex`, `gemini`, `cursor`, `copilot`.
+
+Claude Code users can alternatively use the native plugin marketplace:
+
+```
+/plugin marketplace add <repo-url>
+/plugin install cubby
+```
