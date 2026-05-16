@@ -1,6 +1,9 @@
 import getpass
+import json
 import os
+import subprocess
 import sys
+from pathlib import Path
 
 from cubby_tool import config, keyring, store
 
@@ -149,3 +152,51 @@ def cmd_run(args):
     except FileNotFoundError:
         print(f"cubby run: command not found: {command[0]}", file=sys.stderr)
         return 2
+
+
+def _parse_env_file(path: Path) -> dict:
+    result = {}
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        result[key.strip()] = value
+    return result
+
+
+def _fetch_aws_secret(secret_id: str, region: str | None) -> dict:
+    cmd = ["aws", "secretsmanager", "get-secret-value",
+           "--secret-id", secret_id, "--query", "SecretString", "--output", "text"]
+    if region:
+        cmd += ["--region", region]
+    result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    return json.loads(result.stdout)
+
+
+def cmd_import(args):
+    home, cfg, ns, _ = _resolve(args)
+    if args.from_env:
+        path = Path(args.from_env)
+        if not path.exists():
+            print(f"cubby import: file not found: {args.from_env}", file=sys.stderr)
+            return 2
+        pairs = _parse_env_file(path)
+    elif args.from_aws:
+        try:
+            pairs = _fetch_aws_secret(args.from_aws, args.region)
+        except FileNotFoundError:
+            print("cubby import: aws CLI not found (install awscli)", file=sys.stderr)
+            return 2
+    else:
+        print("cubby import: specify --from-env or --from-aws", file=sys.stderr)
+        return 2
+    identity = keyring.load_identity(home, cfg.key_mode)
+    recipient = keyring.public_key(identity)
+    for name, value in pairs.items():
+        store.set_secret(home, ns, name, str(value), identity, recipient)
+    print(f"cubby: imported {len(pairs)} secret(s) into namespace '{ns}'")
+    return 0

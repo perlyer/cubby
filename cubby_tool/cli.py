@@ -50,6 +50,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("command", nargs=argparse.REMAINDER)
     p_run.set_defaults(func=commands.cmd_run)
 
+    p_import = sub.add_parser("import", help="import secrets from .env or AWS Secrets Manager")
+    p_import.add_argument("-n", "--namespace", default=None)
+    p_import.add_argument("--from-env", dest="from_env", default=None, metavar="PATH")
+    p_import.add_argument("--from-aws", dest="from_aws", default=None, metavar="SECRET_ID")
+    p_import.add_argument("--region", default=None)
+    p_import.set_defaults(func=commands.cmd_import)
+
     return parser
 
 
