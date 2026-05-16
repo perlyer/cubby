@@ -1,0 +1,5 @@
+{
+  "name": "cubby",
+  "description": "Namespaced encrypted secret store — lets Claude use secrets without their values entering its context.",
+  "version": "0.1.0"
+}
