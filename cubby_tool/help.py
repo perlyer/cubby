@@ -29,6 +29,7 @@ GROUPS = [
         ("run", "run a command with secrets in env"),
         ("import", "bulk import from .env / AWS"),
         ("map", "show or change secret env vars"),
+        ("rename", "rename a secret"),
     ]),
     ("namespaces", [
         ("ns", "manage namespaces"),

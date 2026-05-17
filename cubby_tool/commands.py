@@ -223,6 +223,27 @@ def cmd_rm(args):
     return 0
 
 
+def cmd_rename(args):
+    home, cfg, ns, _ = _resolve(args)
+    identity = keyring.load_identity(home, cfg.key_mode)
+    recipient = keyring.public_key(identity)
+    result = store.rename_secret(home, ns, args.old, args.new, identity, recipient)
+    if result == "missing":
+        print(style.fail(f"secret '{args.old}' not found in namespace '{ns}'"),
+              file=sys.stderr)
+        return 4
+    if result == "exists":
+        print(style.fail(f"secret '{args.new}' already exists in namespace '{ns}'"),
+              file=sys.stderr)
+        return 4
+    namespace = cfg.namespaces.get(ns)
+    if namespace is not None and args.old in namespace.env_map:
+        namespace.env_map[args.new] = namespace.env_map.pop(args.old)
+        config.save_config(home, cfg)
+    print(style.ok(f"secret '{args.old}' renamed to '{args.new}' in namespace '{ns}'"))
+    return 0
+
+
 def _env_var_name(secret_name: str) -> str:
     """Default environment-variable name for a secret: UPPER_SNAKE, no prefix."""
     return secret_name.upper().replace("-", "_")
