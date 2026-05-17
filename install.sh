@@ -9,13 +9,27 @@ AGENTS=""
 # --- styling (colour only on an interactive terminal, off when NO_COLOR is set) ---
 if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
   C_GREEN="$(printf '\033[32m')"; C_DIM="$(printf '\033[2m')"
-  C_BOLD="$(printf '\033[1m')";  C_RESET="$(printf '\033[0m')"
+  C_BOLD="$(printf '\033[1m')";  C_CYAN="$(printf '\033[36m')"
+  C_RESET="$(printf '\033[0m')"
 else
-  C_GREEN=""; C_DIM=""; C_BOLD=""; C_RESET=""
+  C_GREEN=""; C_DIM=""; C_BOLD=""; C_CYAN=""; C_RESET=""
 fi
-step() { printf '%s\n' "${C_BOLD}==>${C_RESET} $1"; }
-ok()   { printf '%s\n' "${C_GREEN}✓${C_RESET} $1"; }
-note() { printf '%s\n' "${C_DIM}$1${C_RESET}"; }
+step()   { printf '%s\n' "${C_BOLD}==>${C_RESET} $1"; }
+ok()     { printf '%s\n' "${C_GREEN}✓${C_RESET} $1"; }
+note()   { printf '%s\n' "${C_DIM}$1${C_RESET}"; }
+banner() {
+  [ -t 1 ] || return 0
+  printf '%s' "$C_CYAN"
+  cat <<'ART'
+         _    _
+ __ _  _| |__| |__ _  _
+/ _| || | '_ \ '_ \ || |
+\__|\_,_|_.__/_.__/\_, |
+                   |__/
+  encrypted secret store
+ART
+  printf '%s\n' "$C_RESET"
+}
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -31,6 +45,8 @@ while [ $# -gt 0 ]; do
     *) echo "cubby: unknown option: $1" >&2; exit 2 ;;
   esac
 done
+
+banner
 
 step "Checking prerequisites"
 if ! command -v python3 >/dev/null 2>&1; then

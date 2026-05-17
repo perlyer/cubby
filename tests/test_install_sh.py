@@ -17,3 +17,7 @@ def test_install_sh_has_posix_shebang():
 def test_install_sh_passes_shellcheck_syntax():
     result = subprocess.run(["sh", "-n", str(INSTALL)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+def test_install_sh_has_banner():
+    assert "encrypted secret store" in INSTALL.read_text()

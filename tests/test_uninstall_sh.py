@@ -21,3 +21,7 @@ def test_uninstall_sh_passes_syntax_check():
 
 def test_uninstall_sh_mentions_purge_flag():
     assert "--purge" in UNINSTALL.read_text()
+
+
+def test_uninstall_sh_has_banner():
+    assert "encrypted secret store" in UNINSTALL.read_text()
