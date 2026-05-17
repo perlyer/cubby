@@ -103,3 +103,22 @@ def test_ns_add_help_is_styled(capsys):
 def test_agent_rm_help_is_styled(capsys):
     assert cli.main(["agent", "rm", "-h"]) == 0
     assert "cubby agent rm" in capsys.readouterr().out
+
+
+def test_set_help_shows_argument_descriptions(capsys):
+    assert cli.main(["set", "-h"]) == 0
+    out = capsys.readouterr().out
+    assert "secret name" in out          # the `name` positional
+    assert "namespace to use" in out     # the -n/--namespace option
+
+
+def test_ns_add_help_shows_argument_descriptions(capsys):
+    assert cli.main(["ns", "add", "-h"]) == 0
+    out = capsys.readouterr().out
+    assert "namespace name" in out
+    assert "auto-selects this namespace" in out
+
+
+def test_run_help_shows_command_description(capsys):
+    assert cli.main(["run", "-h"]) == 0
+    assert "the command to run" in capsys.readouterr().out
