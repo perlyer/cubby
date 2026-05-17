@@ -4,6 +4,14 @@ All notable changes to `cubby` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.1] — 2026-05-17
+
+### Changed
+
+- Per-command help (`cubby <command> -h`, at every level — `cubby set -h`,
+  `cubby ns -h`, `cubby ns add -h`, …) now prints the same styled banner-and-box
+  screen as `cubby -h`, instead of argparse's default output.
+
 ## [0.3.0] — 2026-05-17
 
 ### Changed
@@ -59,3 +67,4 @@ First release.
 [0.1.0]: https://github.com/perlyer/cubby/releases/tag/v0.1.0
 [0.2.0]: https://github.com/perlyer/cubby/releases/tag/v0.2.0
 [0.3.0]: https://github.com/perlyer/cubby/releases/tag/v0.3.0
+[0.3.1]: https://github.com/perlyer/cubby/releases/tag/v0.3.1
