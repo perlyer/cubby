@@ -1,15 +1,25 @@
 from cubby_tool import cli, config
 
 
-def test_ns_add_and_list(home, monkeypatch, capsys):
+def test_ns_add_then_listed_bare(home, monkeypatch, capsys):
     monkeypatch.setenv("CUBBY_HOME", str(home))
     assert cli.main(["ns", "add", "acme", "--cwd-prefix", "/p/acme"]) == 0
+    capsys.readouterr()
+    assert cli.main(["ns"]) == 0
+    out = capsys.readouterr().out
+    assert "acme" in out
+    assert "/p/acme" in out
+
+
+def test_ns_list_is_alias_of_bare(home, monkeypatch, capsys):
+    monkeypatch.setenv("CUBBY_HOME", str(home))
+    cli.main(["ns", "add", "acme"])
     capsys.readouterr()
     assert cli.main(["ns", "list"]) == 0
     assert "acme" in capsys.readouterr().out
 
 
-def test_ns_status_shows_active_namespace_and_reason(home, monkeypatch, capsys):
+def test_ns_bare_marks_default(home, monkeypatch, capsys):
     monkeypatch.setenv("CUBBY_HOME", str(home))
     cfg = config.Config(default_namespace="acme", namespaces={"acme": config.Namespace()})
     config.save_config(home, cfg)
@@ -17,6 +27,21 @@ def test_ns_status_shows_active_namespace_and_reason(home, monkeypatch, capsys):
     assert cli.main(["ns"]) == 0
     out = capsys.readouterr().out
     assert "acme" in out and "default" in out
+    assert "active" in out
+
+
+def test_ns_use_sets_default(home, monkeypatch, capsys):
+    monkeypatch.setenv("CUBBY_HOME", str(home))
+    cli.main(["ns", "add", "one"])
+    cli.main(["ns", "add", "two"])
+    assert cli.main(["ns", "use", "two"]) == 0
+    assert config.load_config(home).default_namespace == "two"
+
+
+def test_ns_use_unknown_returns_4(home, monkeypatch, capsys):
+    monkeypatch.setenv("CUBBY_HOME", str(home))
+    cli.main(["ns", "add", "one"])
+    assert cli.main(["ns", "use", "ghost"]) == 4
 
 
 def test_ns_rm(home, monkeypatch, capsys):

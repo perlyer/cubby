@@ -30,32 +30,51 @@ def cmd_ns(args):
         if not cfg.default_namespace:
             cfg.default_namespace = args.name
         config.save_config(home, cfg)
-        print(f"cubby: namespace '{args.name}' added")
+        print(style.ok(f"namespace '{args.name}' added"))
         return 0
 
     if args.ns_cmd == "rm":
         if args.name not in cfg.namespaces:
-            print(f"cubby: namespace '{args.name}' not found", file=sys.stderr)
+            print(style.fail(f"namespace '{args.name}' not found"), file=sys.stderr)
             return 4
         del cfg.namespaces[args.name]
         config.save_config(home, cfg)
-        print(f"cubby: namespace '{args.name}' removed")
+        print(style.ok(f"namespace '{args.name}' removed"))
         return 0
 
-    if args.ns_cmd == "list":
-        for name, ns in sorted(cfg.namespaces.items()):
-            print(f"{name}\t{ns.cwd_prefix or '-'}")
+    if args.ns_cmd == "use":
+        if args.name not in cfg.namespaces:
+            print(style.fail(f"namespace '{args.name}' not found"), file=sys.stderr)
+            return 4
+        cfg.default_namespace = args.name
+        config.save_config(home, cfg)
+        print(style.ok(f"default namespace set to '{args.name}'"))
         return 0
 
-    # bare `cubby ns` — status
+    # bare `cubby ns` or `cubby ns list` — list every namespace
+    if not cfg.namespaces:
+        print(style.fail("no namespaces — run `cubby ns add <name>`"), file=sys.stderr)
+        return 4
     try:
-        ns, reason = config.resolve_namespace(
+        active, _ = config.resolve_namespace(
             cfg, env=os.environ.get("CUBBY_NS"), cwd=os.getcwd()
         )
     except LookupError:
-        print("cubby: no namespace resolved (run `cubby ns add`)", file=sys.stderr)
-        return 4
-    print(f"active namespace: {ns} (resolved via: {reason})")
+        active = None
+    width = max(len(n) for n in cfg.namespaces)
+    print()
+    for name in sorted(cfg.namespaces):
+        ns = cfg.namespaces[name]
+        mark = style.green(style.OK_MARK) if name == active else " "
+        tags = []
+        if name == cfg.default_namespace:
+            tags.append("default")
+        if name == active:
+            tags.append("active")
+        suffix = style.dim(f"  ({', '.join(tags)})") if tags else ""
+        prefix = style.dim(ns.cwd_prefix or "—")
+        print(f"  {mark}  {name.ljust(width)}  {prefix}{suffix}")
+    print()
     return 0
 
 

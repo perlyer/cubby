@@ -19,6 +19,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_ns_add.add_argument("--cwd-prefix", dest="cwd_prefix", default=None)
     p_ns_rm = ns_sub.add_parser("rm", help="remove a namespace")
     p_ns_rm.add_argument("name")
+    p_ns_use = ns_sub.add_parser("use", help="set the default namespace")
+    p_ns_use.add_argument("name")
 
     p_init = sub.add_parser("init", help="first-run setup")
     p_init.add_argument("--key-mode", dest="key_mode", choices=["file", "keychain"],
