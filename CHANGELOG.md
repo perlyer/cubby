@@ -4,6 +4,19 @@ All notable changes to `cubby` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — 2026-05-17
+
+### Changed
+
+- `cubby`, `cubby help`, `cubby -h` and `cubby --help` now print a styled help
+  screen — an ASCII banner and a framed, grouped command list — instead of
+  argparse's default output.
+- An unknown command now prints a styled error with a `did you mean` suggestion
+  (via `difflib`) and a pointer to `cubby help`, instead of an argparse usage dump.
+- `cubby ns`, `cubby agent list` and `cubby get` render their output in a framed
+  card. Frames are drawn only on an interactive terminal; piped output stays
+  plain.
+
 ## [0.2.0] — 2026-05-17
 
 ### Added
@@ -45,3 +58,4 @@ First release.
 
 [0.1.0]: https://github.com/perlyer/cubby/releases/tag/v0.1.0
 [0.2.0]: https://github.com/perlyer/cubby/releases/tag/v0.2.0
+[0.3.0]: https://github.com/perlyer/cubby/releases/tag/v0.3.0
