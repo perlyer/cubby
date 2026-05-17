@@ -102,11 +102,22 @@ def cmd_set(args):
     home, cfg, ns, _ = _resolve(args)
     identity = keyring.load_identity(home, cfg.key_mode)
     recipient = keyring.public_key(identity)
+    namespace = cfg.namespaces.setdefault(ns, config.Namespace())
+    if args.env:
+        names = store.list_names(home, ns, identity)
+        clash = _env_var_clash(namespace.env_map, names, args.env, args.name)
+        if clash:
+            print(style.fail(f"env var '{args.env}' already used by secret '{clash}'"),
+                  file=sys.stderr)
+            return 4
     if args.stdin:
         value = sys.stdin.read().rstrip("\n")
     else:
         value = getpass.getpass(f"value for '{args.name}': ")
     store.set_secret(home, ns, args.name, value, identity, recipient)
+    if args.env:
+        namespace.env_map[args.name] = args.env
+        config.save_config(home, cfg)
     print(style.ok(f"secret '{args.name}' set in namespace '{ns}'"))
     return 0
 
@@ -164,6 +175,17 @@ def _resolve_env_var(env_map: dict, secret_name: str) -> str:
     """The environment variable a secret is injected as: its env_map override,
     or the upper_snake default."""
     return env_map.get(secret_name, _env_var_name(secret_name))
+
+
+def _env_var_clash(env_map: dict, secret_names, target_var: str, this_secret: str):
+    """If a secret other than this_secret already resolves to target_var,
+    return that secret's name; else None."""
+    for name in secret_names:
+        if name == this_secret:
+            continue
+        if _resolve_env_var(env_map, name) == target_var:
+            return name
+    return None
 
 
 def cmd_run(args):

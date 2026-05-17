@@ -37,6 +37,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_set.add_argument("name", help="secret name")
     p_set.add_argument("-n", "--namespace", default=None, help="namespace to use")
     p_set.add_argument("--stdin", action="store_true", help="read value from stdin")
+    p_set.add_argument("--env", dest="env", default=None, metavar="VAR",
+                       help="environment variable to inject this secret as")
     p_set.set_defaults(func=commands.cmd_set)
 
     p_get = sub.add_parser("get", help="show secret metadata")
