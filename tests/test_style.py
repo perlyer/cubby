@@ -23,3 +23,39 @@ def test_ok_and_fail_carry_marks():
     assert "done" in style.ok("done")
     assert style.CROSS_MARK in style.fail("oops")
     assert "oops" in style.fail("oops")
+
+
+def test_cyan_round_trips_when_color_disabled():
+    # under pytest capsys stdout is not a TTY, so colour is off
+    assert style.cyan("hi") == "hi"
+
+
+def test_visible_width_ignores_ansi():
+    assert style.visible_width("\033[32mhello\033[0m") == 5
+    assert style.visible_width("plain") == 5
+    assert style.visible_width("") == 0
+
+
+def test_box_unframed_when_not_tty(monkeypatch):
+    monkeypatch.setattr(style, "box_enabled", lambda: False)
+    out = style.box(["row one", "row two"], title="things", footer="2 total")
+    assert "┌" not in out and "│" not in out
+    assert out.splitlines() == ["things", "row one", "row two", "2 total"]
+
+
+def test_box_framed_when_tty(monkeypatch):
+    monkeypatch.setattr(style, "box_enabled", lambda: True)
+    out = style.box(["row one", "row two"], title="things", footer="2 total")
+    lines = out.splitlines()
+    assert lines[0].startswith("┌") and lines[0].endswith("┐")
+    assert lines[-1].startswith("└") and lines[-1].endswith("┘")
+    assert "things" in lines[0]
+    assert "2 total" in lines[-1]
+    # every rendered line has the same display width
+    assert len({style.visible_width(l) for l in lines}) == 1
+
+
+def test_box_sizes_to_a_title_wider_than_content(monkeypatch):
+    monkeypatch.setattr(style, "box_enabled", lambda: True)
+    out = style.box(["x"], title="a fairly long title")
+    assert len({style.visible_width(l) for l in out.splitlines()}) == 1
