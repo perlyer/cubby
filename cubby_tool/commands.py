@@ -105,7 +105,7 @@ def cmd_set(args):
     else:
         value = getpass.getpass(f"value for '{args.name}': ")
     store.set_secret(home, ns, args.name, value, identity, recipient)
-    print(f"cubby: secret '{args.name}' set in namespace '{ns}'")
+    print(style.ok(f"secret '{args.name}' set in namespace '{ns}'"))
     return 0
 
 
@@ -114,17 +114,18 @@ def cmd_get(args):
     identity = keyring.load_identity(home, cfg.key_mode)
     entries = store.read_entries(home, ns, identity)
     if args.name not in entries:
-        print(f"cubby: secret '{args.name}' not found in namespace '{ns}'", file=sys.stderr)
+        print(style.fail(f"secret '{args.name}' not found in namespace '{ns}'"),
+              file=sys.stderr)
         return 4
     entry = entries[args.name]
     if args.reveal:
         print("WARNING: revealing secret plaintext to stdout", file=sys.stderr)
         print(entry["value"])
     else:
-        print(f"name: {args.name}")
-        print(f"namespace: {ns}")
-        print(f"length: {len(entry['value'])}")
-        print(f"updated: {entry.get('updated', '-')}")
+        print(f"{style.dim('name:')} {args.name}")
+        print(f"{style.dim('namespace:')} {ns}")
+        print(f"{style.dim('length:')} {len(entry['value'])}")
+        print(f"{style.dim('updated:')} {entry.get('updated', '-')}")
     return 0
 
 
@@ -142,9 +143,10 @@ def cmd_rm(args):
     recipient = keyring.public_key(identity)
     existed = store.delete_secret(home, ns, args.name, identity, recipient)
     if not existed:
-        print(f"cubby: secret '{args.name}' not found in namespace '{ns}'", file=sys.stderr)
+        print(style.fail(f"secret '{args.name}' not found in namespace '{ns}'"),
+              file=sys.stderr)
         return 4
-    print(f"cubby: secret '{args.name}' removed from namespace '{ns}'")
+    print(style.ok(f"secret '{args.name}' removed from namespace '{ns}'"))
     return 0
 
 
