@@ -58,6 +58,16 @@ integration into any AI coding agents it finds. Non-interactive:
 automatically at login; the default `--key-mode file` keeps it in
 `~/.config/cubby/identity` (mode `0600`).
 
+## Updating
+
+```bash
+./update.sh
+```
+
+`update.sh` checks out the latest release tag in your clone, re-links `cubby` on your
+`PATH`, and refreshes the agent integrations. It aborts if the working tree has
+uncommitted changes. Your secret store in `~/.config/cubby/` is never touched.
+
 ## Usage
 
 | Command | What it does |
