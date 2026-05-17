@@ -139,6 +139,10 @@ Claude Code users can alternatively use the native plugin marketplace:
 /plugin install cubby
 ```
 
+The integration is a convention — it *asks* the agent to use `cubby run`. For an
+enforced guardrail, also block `cubby get --reveal` in your agent's permission system;
+see [Hardening for AI agents](SECURITY.md#hardening-for-ai-agents).
+
 ## Security
 
 `cubby` keeps secrets encrypted at rest and out of an agent's context — but it is a
