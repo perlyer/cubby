@@ -228,7 +228,7 @@ def cmd_import(args):
 
 def cmd_agent(args):
     if args.agent_cmd is None:
-        print(style.fail("usage: cubby agent {list|add|rm}"), file=sys.stderr)
+        print(style.fail("usage: cubby agent {list|add|rm|refresh}"), file=sys.stderr)
         return 2
     if args.agent_cmd == "list":
         names = agents.names()
@@ -251,6 +251,22 @@ def cmd_agent(args):
             f"{counts['agent absent']} not found"
         ))
         return 0
+    if args.agent_cmd == "refresh":
+        refreshed = []
+        for name in agents.names():
+            adapter = agents.ADAPTERS[name]
+            if adapter.status() == "installed":
+                adapter.install()
+                refreshed.append(name)
+        print()
+        for name in refreshed:
+            print(style.ok(f"refreshed {name}"))
+        if refreshed:
+            print()
+            print(style.dim(f"  refreshed {len(refreshed)} agent integration(s)"))
+        else:
+            print(style.dim("  no agent integrations installed"))
+        return 0
     adapter = agents.get(args.name)
     if adapter is None:
         print(style.fail(f"unknown agent '{args.name}' — see `cubby agent list`"),
@@ -264,5 +280,5 @@ def cmd_agent(args):
         adapter.uninstall()
         print(style.ok(f"integration removed for {adapter.name}"))
         return 0
-    print(style.fail("usage: cubby agent {list|add|rm}"), file=sys.stderr)
+    print(style.fail("usage: cubby agent {list|add|rm|refresh}"), file=sys.stderr)
     return 2

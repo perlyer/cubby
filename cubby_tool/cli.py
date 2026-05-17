@@ -70,6 +70,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_agent_add.add_argument("name")
     p_agent_rm = agent_sub.add_parser("rm", help="remove integration for an agent")
     p_agent_rm.add_argument("name")
+    agent_sub.add_parser("refresh", help="re-install every currently-installed agent integration")
 
     return parser
 
