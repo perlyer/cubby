@@ -39,6 +39,31 @@ precise about what that does and does not buy you.
 In short: `cubby` raises the floor — secrets stop leaking into prompts, logs, and
 transcripts by accident — but it trusts your machine and the code your agent runs.
 
+## Hardening for AI agents
+
+`cubby get --reveal` prints a secret in plaintext — it is the one deliberate escape
+hatch, meant for a human at a terminal. The `cubby agent` integration *asks* an agent
+not to use it, but that is a convention, not a wall.
+
+Where your agent has a permission system, turn the convention into an enforced rule.
+For **Claude Code**, add a deny rule to `~/.claude/settings.json`:
+
+```json
+{
+  "permissions": {
+    "deny": ["Bash(cubby get* --reveal*)"]
+  }
+}
+```
+
+With this in place Claude Code refuses to run any `cubby get … --reveal` invocation —
+the agent cannot reveal a secret even if instructed to. Other agents that support
+command allow/deny lists can be locked down the same way.
+
+This does not close every hole — an agent that runs arbitrary code can still read the
+identity file or `cubby run` a command that exfiltrates the value (see above) — but it
+removes the easiest one.
+
 ## Reporting a vulnerability
 
 Please do not open a public issue for security problems. Report them privately via
