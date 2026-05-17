@@ -5,7 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from cubby_tool import agents, config, keyring, store
+from cubby_tool import agents, config, keyring, store, style
 
 
 def _resolve(args):
@@ -30,39 +30,59 @@ def cmd_ns(args):
         if not cfg.default_namespace:
             cfg.default_namespace = args.name
         config.save_config(home, cfg)
-        print(f"cubby: namespace '{args.name}' added")
+        print(style.ok(f"namespace '{args.name}' added"))
         return 0
 
     if args.ns_cmd == "rm":
         if args.name not in cfg.namespaces:
-            print(f"cubby: namespace '{args.name}' not found", file=sys.stderr)
+            print(style.fail(f"namespace '{args.name}' not found"), file=sys.stderr)
             return 4
         del cfg.namespaces[args.name]
         config.save_config(home, cfg)
-        print(f"cubby: namespace '{args.name}' removed")
+        print(style.ok(f"namespace '{args.name}' removed"))
         return 0
 
-    if args.ns_cmd == "list":
-        for name, ns in sorted(cfg.namespaces.items()):
-            print(f"{name}\t{ns.cwd_prefix or '-'}")
+    if args.ns_cmd == "use":
+        if args.name not in cfg.namespaces:
+            print(style.fail(f"namespace '{args.name}' not found"), file=sys.stderr)
+            return 4
+        cfg.default_namespace = args.name
+        config.save_config(home, cfg)
+        print(style.ok(f"default namespace set to '{args.name}'"))
         return 0
 
-    # bare `cubby ns` — status
+    # bare `cubby ns` or `cubby ns list` — list every namespace
+    if not cfg.namespaces:
+        print(style.fail("no namespaces — run `cubby ns add <name>`"), file=sys.stderr)
+        return 4
     try:
-        ns, reason = config.resolve_namespace(
+        active, _ = config.resolve_namespace(
             cfg, env=os.environ.get("CUBBY_NS"), cwd=os.getcwd()
         )
     except LookupError:
-        print("cubby: no namespace resolved (run `cubby ns add`)", file=sys.stderr)
-        return 4
-    print(f"active namespace: {ns} (resolved via: {reason})")
+        active = None
+    width = max(len(n) for n in cfg.namespaces)
+    print()
+    for name in sorted(cfg.namespaces):
+        ns = cfg.namespaces[name]
+        mark = style.green(style.OK_MARK) if name == active else " "
+        tags = []
+        if name == cfg.default_namespace:
+            tags.append("default")
+        if name == active:
+            tags.append("active")
+        suffix = style.dim(f"  ({', '.join(tags)})") if tags else ""
+        prefix = style.dim(ns.cwd_prefix or "—")
+        print(f"  {mark}  {name.ljust(width)}  {prefix}{suffix}")
+    print()
     return 0
 
 
 def cmd_init(args):
     home = config.get_home()
     if config.config_path(home).exists():
-        print("cubby: already initialized (delete the config dir to re-init)", file=sys.stderr)
+        print(style.fail("already initialized — delete the config dir to re-init"),
+              file=sys.stderr)
         return 4
     identity_text, _ = keyring.generate_identity()
     keyring.store_identity(home, identity_text, args.key_mode)
@@ -73,7 +93,8 @@ def cmd_init(args):
         namespaces={ns_name: config.Namespace(cwd_prefix=args.cwd_prefix, env_map={})},
     )
     config.save_config(home, cfg)
-    print(f"cubby: initialized at {home} (namespace '{ns_name}', key mode '{args.key_mode}')")
+    print(style.ok(
+        f"initialized at {home} (namespace '{ns_name}', key mode '{args.key_mode}')"))
     return 0
 
 
@@ -86,7 +107,7 @@ def cmd_set(args):
     else:
         value = getpass.getpass(f"value for '{args.name}': ")
     store.set_secret(home, ns, args.name, value, identity, recipient)
-    print(f"cubby: secret '{args.name}' set in namespace '{ns}'")
+    print(style.ok(f"secret '{args.name}' set in namespace '{ns}'"))
     return 0
 
 
@@ -95,17 +116,18 @@ def cmd_get(args):
     identity = keyring.load_identity(home, cfg.key_mode)
     entries = store.read_entries(home, ns, identity)
     if args.name not in entries:
-        print(f"cubby: secret '{args.name}' not found in namespace '{ns}'", file=sys.stderr)
+        print(style.fail(f"secret '{args.name}' not found in namespace '{ns}'"),
+              file=sys.stderr)
         return 4
     entry = entries[args.name]
     if args.reveal:
         print("WARNING: revealing secret plaintext to stdout", file=sys.stderr)
         print(entry["value"])
     else:
-        print(f"name: {args.name}")
-        print(f"namespace: {ns}")
-        print(f"length: {len(entry['value'])}")
-        print(f"updated: {entry.get('updated', '-')}")
+        print(f"{style.dim('name:')} {args.name}")
+        print(f"{style.dim('namespace:')} {ns}")
+        print(f"{style.dim('length:')} {len(entry['value'])}")
+        print(f"{style.dim('updated:')} {entry.get('updated', '-')}")
     return 0
 
 
@@ -123,9 +145,10 @@ def cmd_rm(args):
     recipient = keyring.public_key(identity)
     existed = store.delete_secret(home, ns, args.name, identity, recipient)
     if not existed:
-        print(f"cubby: secret '{args.name}' not found in namespace '{ns}'", file=sys.stderr)
+        print(style.fail(f"secret '{args.name}' not found in namespace '{ns}'"),
+              file=sys.stderr)
         return 4
-    print(f"cubby: secret '{args.name}' removed from namespace '{ns}'")
+    print(style.ok(f"secret '{args.name}' removed from namespace '{ns}'"))
     return 0
 
 
@@ -139,7 +162,8 @@ def cmd_run(args):
     if command and command[0] == "--":
         command = command[1:]
     if not command:
-        print("cubby run: no command given (usage: cubby run -- <cmd>)", file=sys.stderr)
+        print(style.fail("run: no command given (usage: cubby run -- <cmd>)"),
+              file=sys.stderr)
         return 2
     identity = keyring.load_identity(home, cfg.key_mode)
     values = store.read_values(home, ns, identity)
@@ -150,7 +174,7 @@ def cmd_run(args):
     try:
         os.execvpe(command[0], command, child_env)
     except FileNotFoundError:
-        print(f"cubby run: command not found: {command[0]}", file=sys.stderr)
+        print(style.fail(f"run: command not found: {command[0]}"), file=sys.stderr)
         return 2
 
 
@@ -182,45 +206,79 @@ def cmd_import(args):
     if args.from_env:
         path = Path(args.from_env)
         if not path.exists():
-            print(f"cubby import: file not found: {args.from_env}", file=sys.stderr)
+            print(style.fail(f"import: file not found: {args.from_env}"), file=sys.stderr)
             return 2
         pairs = _parse_env_file(path)
     elif args.from_aws:
         try:
             pairs = _fetch_aws_secret(args.from_aws, args.region)
         except FileNotFoundError:
-            print("cubby import: aws CLI not found (install awscli)", file=sys.stderr)
+            print(style.fail("import: aws CLI not found (install awscli)"), file=sys.stderr)
             return 2
     else:
-        print("cubby import: specify --from-env or --from-aws", file=sys.stderr)
+        print(style.fail("import: specify --from-env or --from-aws"), file=sys.stderr)
         return 2
     identity = keyring.load_identity(home, cfg.key_mode)
     recipient = keyring.public_key(identity)
     for name, value in pairs.items():
         store.set_secret(home, ns, name, str(value), identity, recipient)
-    print(f"cubby: imported {len(pairs)} secret(s) into namespace '{ns}'")
+    print(style.ok(f"imported {len(pairs)} secret(s) into namespace '{ns}'"))
     return 0
 
 
 def cmd_agent(args):
     if args.agent_cmd is None:
-        print("usage: cubby agent {list|add|rm}", file=sys.stderr)
+        print(style.fail("usage: cubby agent {list|add|rm|refresh}"), file=sys.stderr)
         return 2
     if args.agent_cmd == "list":
+        names = agents.names()
+        width = max(len(n) for n in names)
+        marks = {
+            "installed": style.green(style.OK_MARK),
+            "not installed": style.dim(style.DOT_MARK),
+            "agent absent": style.dim(style.CROSS_MARK),
+        }
+        counts = {"installed": 0, "not installed": 0, "agent absent": 0}
+        print()
+        for name in names:
+            st = agents.ADAPTERS[name].status()
+            counts[st] = counts.get(st, 0) + 1
+            print(f"  {marks.get(st, ' ')}  {name.ljust(width)}  {style.dim(st)}")
+        print()
+        print(style.dim(
+            f"  {counts['installed']} installed · "
+            f"{counts['not installed']} available · "
+            f"{counts['agent absent']} not found"
+        ))
+        return 0
+    if args.agent_cmd == "refresh":
+        refreshed = []
         for name in agents.names():
-            print(f"{name}\t{agents.ADAPTERS[name].status()}")
+            adapter = agents.ADAPTERS[name]
+            if adapter.status() == "installed":
+                adapter.install()
+                refreshed.append(name)
+        print()
+        for name in refreshed:
+            print(style.ok(f"refreshed {name}"))
+        if refreshed:
+            print()
+            print(style.dim(f"  refreshed {len(refreshed)} agent integration(s)"))
+        else:
+            print(style.dim("  no agent integrations installed"))
         return 0
     adapter = agents.get(args.name)
     if adapter is None:
-        print(f"cubby: unknown agent '{args.name}' (see `cubby agent list`)", file=sys.stderr)
+        print(style.fail(f"unknown agent '{args.name}' — see `cubby agent list`"),
+              file=sys.stderr)
         return 4
     if args.agent_cmd == "add":
         adapter.install()
-        print(f"cubby: integration installed for {adapter.name}")
+        print(style.ok(f"integration installed for {adapter.name}"))
         return 0
     if args.agent_cmd == "rm":
         adapter.uninstall()
-        print(f"cubby: integration removed for {adapter.name}")
+        print(style.ok(f"integration removed for {adapter.name}"))
         return 0
-    print("usage: cubby agent {list|add|rm}", file=sys.stderr)
+    print(style.fail("usage: cubby agent {list|add|rm|refresh}"), file=sys.stderr)
     return 2

@@ -3,7 +3,7 @@ import json
 import subprocess
 import sys
 
-from cubby_tool import commands
+from cubby_tool import commands, style
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -19,6 +19,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_ns_add.add_argument("--cwd-prefix", dest="cwd_prefix", default=None)
     p_ns_rm = ns_sub.add_parser("rm", help="remove a namespace")
     p_ns_rm.add_argument("name")
+    p_ns_use = ns_sub.add_parser("use", help="set the default namespace")
+    p_ns_use.add_argument("name")
 
     p_init = sub.add_parser("init", help="first-run setup")
     p_init.add_argument("--key-mode", dest="key_mode", choices=["file", "keychain"],
@@ -68,6 +70,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_agent_add.add_argument("name")
     p_agent_rm = agent_sub.add_parser("rm", help="remove integration for an agent")
     p_agent_rm.add_argument("name")
+    agent_sub.add_parser("refresh", help="re-install every currently-installed agent integration")
 
     return parser
 
@@ -77,19 +80,18 @@ def main(argv=None) -> int:
     try:
         return args.func(args)
     except LookupError as e:
-        # namespace could not be resolved
-        print(f"cubby: {e}", file=sys.stderr)
+        print(style.fail(str(e)), file=sys.stderr)
         return 4
     except FileNotFoundError as e:
-        print(f"cubby: not found: {e.filename or e}", file=sys.stderr)
+        print(style.fail(f"not found: {e.filename or e}"), file=sys.stderr)
         return 2
     except subprocess.CalledProcessError as e:
-        print(f"cubby: external command failed: {e.cmd[0]} (exit {e.returncode})",
+        print(style.fail(f"external command failed: {e.cmd[0]} (exit {e.returncode})"),
               file=sys.stderr)
         return 2
     except json.JSONDecodeError as e:
-        print(f"cubby: invalid JSON ({e})", file=sys.stderr)
+        print(style.fail(f"invalid JSON ({e})"), file=sys.stderr)
         return 2
     except ValueError as e:
-        print(f"cubby: {e}", file=sys.stderr)
+        print(style.fail(str(e)), file=sys.stderr)
         return 2

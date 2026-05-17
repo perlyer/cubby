@@ -4,6 +4,26 @@ All notable changes to `cubby` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] — 2026-05-17
+
+### Added
+
+- `cubby ns use <name>` — set the default namespace from the CLI.
+- `uninstall.sh` — removes the `cubby` symlink and agent integrations; keeps the
+  secret store unless `--purge` is given or confirmed interactively.
+- Coloured, aligned terminal output with status symbols; colour is disabled when
+  output is piped or `NO_COLOR` is set.
+- `update.sh` — updates an installed cubby to the latest release tag and refreshes
+  agent integrations.
+- `cubby agent refresh` — re-installs every currently-installed agent integration.
+- An ASCII banner on `install.sh` / `uninstall.sh` / `update.sh`.
+
+### Changed
+
+- `cubby ns` with no arguments now lists every namespace (marking the default and
+  the active one) instead of printing only the active namespace.
+- `install.sh` output is restyled with step headers and a summary.
+
 ## [0.1.0] — 2026-05-17
 
 First release.
@@ -24,3 +44,4 @@ First release.
 - Two key-storage modes: an `0600` identity file, or the macOS login Keychain.
 
 [0.1.0]: https://github.com/perlyer/cubby/releases/tag/v0.1.0
+[0.2.0]: https://github.com/perlyer/cubby/releases/tag/v0.2.0
