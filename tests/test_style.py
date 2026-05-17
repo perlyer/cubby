@@ -59,3 +59,12 @@ def test_box_sizes_to_a_title_wider_than_content(monkeypatch):
     monkeypatch.setattr(style, "box_enabled", lambda: True)
     out = style.box(["x"], title="a fairly long title")
     assert len({style.visible_width(l) for l in out.splitlines()}) == 1
+
+
+def test_box_framed_with_no_title_or_footer(monkeypatch):
+    monkeypatch.setattr(style, "box_enabled", lambda: True)
+    out = style.box(["row one", "row two"])
+    lines = out.splitlines()
+    assert lines[0].startswith("┌") and lines[0].endswith("┐")
+    assert lines[-1].startswith("└") and lines[-1].endswith("┘")
+    assert len({style.visible_width(l) for l in lines}) == 1

@@ -76,7 +76,7 @@ def box_enabled() -> bool:
     return sys.stdout.isatty()
 
 
-def box(lines, title=None, footer=None) -> str:
+def box(lines: list[str], title: str | None = None, footer: str | None = None) -> str:
     """Render lines as a framed card — title in the top border, footer in the
     bottom border. When stdout is not a TTY, draw no frame: title and footer
     become plain lines instead, so no information is lost."""
@@ -90,14 +90,14 @@ def box(lines, title=None, footer=None) -> str:
         return "\n".join(plain)
 
     widths = [visible_width(l) for l in lines]
-    if title:
+    if title is not None:
         widths.append(visible_width(title) + 2)
-    if footer:
+    if footer is not None:
         widths.append(visible_width(footer) + 2)
     inner = max(widths) if widths else 0
 
     def border(label, left, right):
-        if label:
+        if label is not None:
             dashes = max(inner - visible_width(label) - 1, 0)
             return left + "─ " + label + " " + "─" * dashes + right
         return left + "─" * (inner + 2) + right
