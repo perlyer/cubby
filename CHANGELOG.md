@@ -13,6 +13,10 @@ All notable changes to `cubby` are documented here. The format follows
   secret store unless `--purge` is given or confirmed interactively.
 - Coloured, aligned terminal output with status symbols; colour is disabled when
   output is piped or `NO_COLOR` is set.
+- `update.sh` — updates an installed cubby to the latest release tag and refreshes
+  agent integrations.
+- `cubby agent refresh` — re-installs every currently-installed agent integration.
+- An ASCII banner on `install.sh` / `uninstall.sh` / `update.sh`.
 
 ### Changed
 
