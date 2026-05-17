@@ -188,9 +188,13 @@ def cmd_get(args):
         print("WARNING: revealing secret plaintext to stdout", file=sys.stderr)
         print(entry["value"])
     else:
+        namespace = cfg.namespaces.get(ns, config.Namespace())
+        var = _resolve_env_var(namespace.env_map, args.name)
+        kind = "override" if args.name in namespace.env_map else "default"
         lines = [
             f" {style.dim('name:')} {args.name}",
             f" {style.dim('namespace:')} {ns}",
+            f" {style.dim('env var:')} {var} ({kind})",
             f" {style.dim('length:')} {len(entry['value'])}",
             f" {style.dim('updated:')} {entry.get('updated', '-')}",
         ]
