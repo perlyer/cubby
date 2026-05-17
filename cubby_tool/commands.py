@@ -124,7 +124,7 @@ def cmd_set(args):
 
 def cmd_map(args):
     home, cfg, ns, _ = _resolve(args)
-    namespace = cfg.namespaces.setdefault(ns, config.Namespace())
+    namespace = cfg.namespaces.get(ns, config.Namespace())
     identity = keyring.load_identity(home, cfg.key_mode)
     names = store.list_names(home, ns, identity)
 
@@ -147,6 +147,7 @@ def cmd_map(args):
         return 4
 
     if args.reset:
+        namespace = cfg.namespaces.setdefault(ns, config.Namespace())
         if args.name in namespace.env_map:
             del namespace.env_map[args.name]
             config.save_config(home, cfg)
@@ -162,6 +163,7 @@ def cmd_map(args):
             print(style.fail(f"env var '{args.var}' already used by secret '{clash}'"),
                   file=sys.stderr)
             return 4
+        namespace = cfg.namespaces.setdefault(ns, config.Namespace())
         namespace.env_map[args.name] = args.var
         config.save_config(home, cfg)
         print(style.ok(f"'{args.name}' → env var '{args.var}'"))

@@ -43,6 +43,7 @@ def test_map_show_one_secret(inited_home, monkeypatch, capsys):
 
 def test_map_unknown_secret_returns_4(inited_home, capsys):
     assert cli.main(["map", "ghost", "GHOST"]) == 4
+    assert "not found" in capsys.readouterr().err
 
 
 def test_map_clashing_var_returns_4(inited_home, monkeypatch, capsys):
