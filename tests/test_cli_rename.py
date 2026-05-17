@@ -35,3 +35,14 @@ def test_rename_to_existing_name_returns_4(inited_home, monkeypatch, capsys):
     cli.main(["set", "beta"])
     capsys.readouterr()
     assert cli.main(["rename", "alpha", "beta"]) == 4
+
+
+def test_rename_to_self_is_rejected(inited_home, monkeypatch, capsys):
+    monkeypatch.setattr(getpass, "getpass", lambda *a, **k: "s3cret")
+    cli.main(["set", "samename"])
+    capsys.readouterr()
+    assert cli.main(["rename", "samename", "samename"]) == 4
+    capsys.readouterr()
+    # the secret must still be there — the rejected rename must not destroy it
+    assert cli.main(["list"]) == 0
+    assert "samename" in capsys.readouterr().out
