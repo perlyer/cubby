@@ -40,3 +40,11 @@ def test_rm_secret(inited_home, monkeypatch):
     cli.main(["set", "db"])
     assert cli.main(["rm", "db"]) == 0
     assert cli.main(["get", "db"]) == 4
+
+
+def test_get_metadata_shows_secret_title(inited_home, monkeypatch, capsys):
+    monkeypatch.setattr(getpass, "getpass", lambda *a, **k: "s3cret")
+    cli.main(["set", "db"])
+    capsys.readouterr()
+    assert cli.main(["get", "db"]) == 0
+    assert "secret 'db'" in capsys.readouterr().out

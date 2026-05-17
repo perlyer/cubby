@@ -62,7 +62,7 @@ def cmd_ns(args):
     except LookupError:
         active = None
     width = max(len(n) for n in cfg.namespaces)
-    print()
+    lines = []
     for name in sorted(cfg.namespaces):
         ns = cfg.namespaces[name]
         mark = style.green(style.OK_MARK) if name == active else " "
@@ -73,8 +73,8 @@ def cmd_ns(args):
             tags.append("active")
         suffix = style.dim(f"  ({', '.join(tags)})") if tags else ""
         prefix = style.dim(ns.cwd_prefix or "—")
-        print(f"  {mark}  {name.ljust(width)}  {prefix}{suffix}")
-    print()
+        lines.append(f" {mark}  {name.ljust(width)}  {prefix}{suffix}")
+    print(style.box(lines, title="namespaces"))
     return 0
 
 
@@ -124,10 +124,13 @@ def cmd_get(args):
         print("WARNING: revealing secret plaintext to stdout", file=sys.stderr)
         print(entry["value"])
     else:
-        print(f"{style.dim('name:')} {args.name}")
-        print(f"{style.dim('namespace:')} {ns}")
-        print(f"{style.dim('length:')} {len(entry['value'])}")
-        print(f"{style.dim('updated:')} {entry.get('updated', '-')}")
+        lines = [
+            f" {style.dim('name:')} {args.name}",
+            f" {style.dim('namespace:')} {ns}",
+            f" {style.dim('length:')} {len(entry['value'])}",
+            f" {style.dim('updated:')} {entry.get('updated', '-')}",
+        ]
+        print(style.box(lines, title=f"secret '{args.name}'"))
     return 0
 
 
@@ -239,17 +242,17 @@ def cmd_agent(args):
             "agent absent": style.dim(style.CROSS_MARK),
         }
         counts = {"installed": 0, "not installed": 0, "agent absent": 0}
-        print()
+        lines = []
         for name in names:
             st = agents.ADAPTERS[name].status()
             counts[st] = counts.get(st, 0) + 1
-            print(f"  {marks.get(st, ' ')}  {name.ljust(width)}  {style.dim(st)}")
-        print()
-        print(style.dim(
-            f"  {counts['installed']} installed · "
+            lines.append(f" {marks.get(st, ' ')}  {name.ljust(width)}  {style.dim(st)}")
+        summary = (
+            f"{counts['installed']} installed · "
             f"{counts['not installed']} available · "
             f"{counts['agent absent']} not found"
-        ))
+        )
+        print(style.box(lines, title="agent integrations", footer=summary))
         return 0
     if args.agent_cmd == "refresh":
         refreshed = []

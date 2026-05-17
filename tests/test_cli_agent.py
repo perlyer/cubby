@@ -48,3 +48,8 @@ def test_agent_refresh_regenerates_installed(tmp_path, monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "codex" in out
     assert agents_md.read_text() == canonical
+
+
+def test_agent_list_is_framed_under_a_title(capsys):
+    assert cli.main(["agent", "list"]) == 0
+    assert "agent integrations" in capsys.readouterr().out

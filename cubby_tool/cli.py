@@ -1,9 +1,11 @@
 import argparse
+import difflib
 import json
 import subprocess
 import sys
 
 from cubby_tool import commands, style
+from cubby_tool.help import command_names, render_help
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -75,7 +77,26 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+HELP_TOKENS = {"-h", "--help", "help"}
+
+
 def main(argv=None) -> int:
+    argv = sys.argv[1:] if argv is None else list(argv)
+
+    if not argv or argv[0] in HELP_TOKENS:
+        print(render_help())
+        return 0
+
+    cmd = argv[0]
+    names = command_names()
+    if not cmd.startswith("-") and cmd not in names:
+        print(style.fail(f"unknown command '{cmd}'"), file=sys.stderr)
+        match = difflib.get_close_matches(cmd, names, n=1)
+        if match:
+            print(f"  did you mean '{match[0]}'?", file=sys.stderr)
+        print("  run 'cubby help' to see available commands", file=sys.stderr)
+        return 2
+
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
