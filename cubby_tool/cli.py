@@ -96,6 +96,8 @@ def _find_help_target(parser, argv):
     path = ["cubby"]
     description = None
     for tok in argv:
+        # only -h/--help here, not HELP_TOKENS: "help" is a real subcommand name
+        # and must stay walkable, not be treated as a help token mid-path
         if tok in ("-h", "--help"):
             return node, path, description
         sub = _subparsers_action(node)
