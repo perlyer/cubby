@@ -88,9 +88,10 @@ def main(argv=None) -> int:
         return 0
 
     cmd = argv[0]
-    if not cmd.startswith("-") and cmd not in command_names():
+    names = command_names()
+    if not cmd.startswith("-") and cmd not in names:
         print(style.fail(f"unknown command '{cmd}'"), file=sys.stderr)
-        match = difflib.get_close_matches(cmd, command_names(), n=1)
+        match = difflib.get_close_matches(cmd, names, n=1)
         if match:
             print(f"  did you mean '{match[0]}'?", file=sys.stderr)
         print("  run 'cubby help' to see available commands", file=sys.stderr)

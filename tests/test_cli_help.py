@@ -1,3 +1,5 @@
+import pytest
+
 from cubby_tool import cli
 
 
@@ -35,3 +37,10 @@ def test_unknown_command_suggests_a_close_match(capsys):
 def test_unknown_command_no_suggestion_for_gibberish(capsys):
     assert cli.main(["xyzzy"]) == 2
     assert "did you mean" not in capsys.readouterr().err
+
+
+def test_leading_flag_token_falls_through_to_argparse():
+    # an unknown leading flag is argparse's job, not the unknown-command branch;
+    # argparse rejects it by raising SystemExit (not returning 2)
+    with pytest.raises(SystemExit):
+        cli.main(["--bogus"])
