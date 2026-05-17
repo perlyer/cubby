@@ -122,6 +122,57 @@ def cmd_set(args):
     return 0
 
 
+def cmd_map(args):
+    home, cfg, ns, _ = _resolve(args)
+    namespace = cfg.namespaces.setdefault(ns, config.Namespace())
+    identity = keyring.load_identity(home, cfg.key_mode)
+    names = store.list_names(home, ns, identity)
+
+    if args.name is None:
+        if not names:
+            print(style.dim(f"no secrets in namespace '{ns}'"))
+            return 0
+        width = max(len(n) for n in names)
+        lines = []
+        for name in names:
+            var = _resolve_env_var(namespace.env_map, name)
+            kind = "override" if name in namespace.env_map else "default"
+            lines.append(f" {name.ljust(width)}  {style.green(var)}  {style.dim(kind)}")
+        print(style.box(lines, title=f"env map · {ns}"))
+        return 0
+
+    if args.name not in names:
+        print(style.fail(f"secret '{args.name}' not found in namespace '{ns}'"),
+              file=sys.stderr)
+        return 4
+
+    if args.reset:
+        if args.name in namespace.env_map:
+            del namespace.env_map[args.name]
+            config.save_config(home, cfg)
+            print(style.ok(f"'{args.name}' reset to default env var "
+                           f"'{_env_var_name(args.name)}'"))
+        else:
+            print(style.dim(f"'{args.name}' already uses the default env var"))
+        return 0
+
+    if args.var is not None:
+        clash = _env_var_clash(namespace.env_map, names, args.var, args.name)
+        if clash:
+            print(style.fail(f"env var '{args.var}' already used by secret '{clash}'"),
+                  file=sys.stderr)
+            return 4
+        namespace.env_map[args.name] = args.var
+        config.save_config(home, cfg)
+        print(style.ok(f"'{args.name}' → env var '{args.var}'"))
+        return 0
+
+    var = _resolve_env_var(namespace.env_map, args.name)
+    kind = "override" if args.name in namespace.env_map else "default"
+    print(f"{args.name} → {var} ({kind})")
+    return 0
+
+
 def cmd_get(args):
     home, cfg, ns, _ = _resolve(args)
     identity = keyring.load_identity(home, cfg.key_mode)

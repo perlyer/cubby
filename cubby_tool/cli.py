@@ -41,6 +41,15 @@ def build_parser() -> argparse.ArgumentParser:
                        help="environment variable to inject this secret as")
     p_set.set_defaults(func=commands.cmd_set)
 
+    p_map = sub.add_parser("map", help="show or change how secrets map to env vars")
+    p_map.add_argument("name", nargs="?", default=None, help="secret name")
+    p_map.add_argument("var", nargs="?", default=None, metavar="VAR",
+                       help="environment variable to inject the secret as")
+    p_map.add_argument("-n", "--namespace", default=None, help="namespace to use")
+    p_map.add_argument("--reset", action="store_true",
+                       help="drop the override, revert to the default name")
+    p_map.set_defaults(func=commands.cmd_map)
+
     p_get = sub.add_parser("get", help="show secret metadata")
     p_get.add_argument("name", help="secret name")
     p_get.add_argument("-n", "--namespace", default=None, help="namespace to use")
