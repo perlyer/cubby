@@ -81,7 +81,8 @@ def cmd_ns(args):
 def cmd_init(args):
     home = config.get_home()
     if config.config_path(home).exists():
-        print("cubby: already initialized (delete the config dir to re-init)", file=sys.stderr)
+        print(style.fail("already initialized — delete the config dir to re-init"),
+              file=sys.stderr)
         return 4
     identity_text, _ = keyring.generate_identity()
     keyring.store_identity(home, identity_text, args.key_mode)
@@ -92,7 +93,8 @@ def cmd_init(args):
         namespaces={ns_name: config.Namespace(cwd_prefix=args.cwd_prefix, env_map={})},
     )
     config.save_config(home, cfg)
-    print(f"cubby: initialized at {home} (namespace '{ns_name}', key mode '{args.key_mode}')")
+    print(style.ok(
+        f"initialized at {home} (namespace '{ns_name}', key mode '{args.key_mode}')"))
     return 0
 
 
@@ -160,7 +162,8 @@ def cmd_run(args):
     if command and command[0] == "--":
         command = command[1:]
     if not command:
-        print("cubby run: no command given (usage: cubby run -- <cmd>)", file=sys.stderr)
+        print(style.fail("run: no command given (usage: cubby run -- <cmd>)"),
+              file=sys.stderr)
         return 2
     identity = keyring.load_identity(home, cfg.key_mode)
     values = store.read_values(home, ns, identity)
@@ -171,7 +174,7 @@ def cmd_run(args):
     try:
         os.execvpe(command[0], command, child_env)
     except FileNotFoundError:
-        print(f"cubby run: command not found: {command[0]}", file=sys.stderr)
+        print(style.fail(f"run: command not found: {command[0]}"), file=sys.stderr)
         return 2
 
 
@@ -203,23 +206,23 @@ def cmd_import(args):
     if args.from_env:
         path = Path(args.from_env)
         if not path.exists():
-            print(f"cubby import: file not found: {args.from_env}", file=sys.stderr)
+            print(style.fail(f"import: file not found: {args.from_env}"), file=sys.stderr)
             return 2
         pairs = _parse_env_file(path)
     elif args.from_aws:
         try:
             pairs = _fetch_aws_secret(args.from_aws, args.region)
         except FileNotFoundError:
-            print("cubby import: aws CLI not found (install awscli)", file=sys.stderr)
+            print(style.fail("import: aws CLI not found (install awscli)"), file=sys.stderr)
             return 2
     else:
-        print("cubby import: specify --from-env or --from-aws", file=sys.stderr)
+        print(style.fail("import: specify --from-env or --from-aws"), file=sys.stderr)
         return 2
     identity = keyring.load_identity(home, cfg.key_mode)
     recipient = keyring.public_key(identity)
     for name, value in pairs.items():
         store.set_secret(home, ns, name, str(value), identity, recipient)
-    print(f"cubby: imported {len(pairs)} secret(s) into namespace '{ns}'")
+    print(style.ok(f"imported {len(pairs)} secret(s) into namespace '{ns}'"))
     return 0
 
 

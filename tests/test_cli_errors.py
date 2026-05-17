@@ -8,7 +8,7 @@ def test_main_handles_corrupt_config(home, monkeypatch, capsys):
     rc = cli.main(["ns", "list"])
     assert rc == 2
     err = capsys.readouterr().err
-    assert "cubby:" in err
+    assert "✗" in err
     assert "Traceback" not in err
 
 
@@ -18,5 +18,5 @@ def test_main_handles_unresolvable_namespace(home, monkeypatch, capsys):
     rc = cli.main(["list"])
     assert rc == 4
     err = capsys.readouterr().err
-    assert "cubby:" in err
+    assert "✗" in err
     assert "Traceback" not in err

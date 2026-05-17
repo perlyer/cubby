@@ -3,7 +3,7 @@ import json
 import subprocess
 import sys
 
-from cubby_tool import commands
+from cubby_tool import commands, style
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -79,19 +79,18 @@ def main(argv=None) -> int:
     try:
         return args.func(args)
     except LookupError as e:
-        # namespace could not be resolved
-        print(f"cubby: {e}", file=sys.stderr)
+        print(style.fail(str(e)), file=sys.stderr)
         return 4
     except FileNotFoundError as e:
-        print(f"cubby: not found: {e.filename or e}", file=sys.stderr)
+        print(style.fail(f"not found: {e.filename or e}"), file=sys.stderr)
         return 2
     except subprocess.CalledProcessError as e:
-        print(f"cubby: external command failed: {e.cmd[0]} (exit {e.returncode})",
+        print(style.fail(f"external command failed: {e.cmd[0]} (exit {e.returncode})"),
               file=sys.stderr)
         return 2
     except json.JSONDecodeError as e:
-        print(f"cubby: invalid JSON ({e})", file=sys.stderr)
+        print(style.fail(f"invalid JSON ({e})"), file=sys.stderr)
         return 2
     except ValueError as e:
-        print(f"cubby: {e}", file=sys.stderr)
+        print(style.fail(str(e)), file=sys.stderr)
         return 2
