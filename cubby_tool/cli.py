@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 from cubby_tool import commands, style
-from cubby_tool.help import command_names, render_help
+from cubby_tool.help import command_names, render_command_help, render_help
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -80,6 +80,35 @@ def build_parser() -> argparse.ArgumentParser:
 HELP_TOKENS = {"-h", "--help", "help"}
 
 
+def _subparsers_action(parser):
+    """Return the parser's argparse._SubParsersAction, or None."""
+    for action in parser._actions:
+        if isinstance(action, argparse._SubParsersAction):
+            return action
+    return None
+
+
+def _find_help_target(parser, argv):
+    """If argv is a command path followed immediately by a help token, return
+    (parser, path, description) for the styled per-command help screen.
+    Otherwise return None — the caller hands argv to argparse unchanged."""
+    node = parser
+    path = ["cubby"]
+    description = None
+    for tok in argv:
+        if tok in ("-h", "--help"):
+            return node, path, description
+        sub = _subparsers_action(node)
+        if sub is None or tok not in sub.choices:
+            return None
+        description = next(
+            (a.help for a in sub._get_subactions() if a.dest == tok), None
+        )
+        node = sub.choices[tok]
+        path.append(tok)
+    return None
+
+
 def main(argv=None) -> int:
     argv = sys.argv[1:] if argv is None else list(argv)
 
@@ -97,7 +126,14 @@ def main(argv=None) -> int:
         print("  run 'cubby help' to see available commands", file=sys.stderr)
         return 2
 
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    target = _find_help_target(parser, argv)
+    if target is not None:
+        node, path, description = target
+        print(render_command_help(node, path, description))
+        return 0
+
+    args = parser.parse_args(argv)
     try:
         return args.func(args)
     except LookupError as e:
