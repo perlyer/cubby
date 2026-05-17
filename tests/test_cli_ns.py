@@ -49,3 +49,11 @@ def test_ns_rm(home, monkeypatch, capsys):
     cli.main(["ns", "add", "acme"])
     assert cli.main(["ns", "rm", "acme"]) == 0
     assert config.load_config(home).namespaces == {}
+
+
+def test_ns_bare_shows_namespaces_title(home, monkeypatch, capsys):
+    monkeypatch.setenv("CUBBY_HOME", str(home))
+    cli.main(["ns", "add", "acme"])
+    capsys.readouterr()
+    assert cli.main(["ns"]) == 0
+    assert "namespaces" in capsys.readouterr().out
