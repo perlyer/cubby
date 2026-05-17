@@ -30,7 +30,7 @@ def _run(home, args):
 
 def test_run_injects_secret_as_default_env_var(home, identity, recipient):
     _setup(home, identity, recipient)
-    result = _run(home, ["run", "-n", "test", "--", "sh", "-c", "echo $CUBBY_DB_PASS"])
+    result = _run(home, ["run", "-n", "test", "--", "sh", "-c", "echo $DB_PASS"])
     assert result.returncode == 0
     assert result.stdout.strip() == "s3cret"
 

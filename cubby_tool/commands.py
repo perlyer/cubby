@@ -156,7 +156,14 @@ def cmd_rm(args):
 
 
 def _env_var_name(secret_name: str) -> str:
-    return "CUBBY_" + secret_name.upper().replace("-", "_")
+    """Default environment-variable name for a secret: UPPER_SNAKE, no prefix."""
+    return secret_name.upper().replace("-", "_")
+
+
+def _resolve_env_var(env_map: dict, secret_name: str) -> str:
+    """The environment variable a secret is injected as: its env_map override,
+    or the upper_snake default."""
+    return env_map.get(secret_name, _env_var_name(secret_name))
 
 
 def cmd_run(args):
@@ -173,7 +180,7 @@ def cmd_run(args):
     env_map = cfg.namespaces.get(ns, config.Namespace()).env_map
     child_env = dict(os.environ)
     for name, value in values.items():
-        child_env[env_map.get(name, _env_var_name(name))] = value
+        child_env[_resolve_env_var(env_map, name)] = value
     try:
         os.execvpe(command[0], command, child_env)
     except FileNotFoundError:
