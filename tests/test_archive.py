@@ -1,9 +1,11 @@
 import io
+import subprocess
 import tarfile
 
 import pytest
 
 from cubby_tool import archive
+from cubby_tool import config
 
 
 def test_build_then_extract_round_trips():
@@ -163,5 +165,18 @@ def test_restore_bundle_returns_original_key_mode(home, monkeypatch, tmp_path):
     monkeypatch.setattr(archive.subprocess, "run", fake_run)
     original = archive.restore_bundle(tmp_path / "bundle.age", home)
     assert original == "keychain"
-    from cubby_tool import config
     assert config.load_config(home).key_mode == "file"
+
+
+def test_restore_bundle_decrypt_failure_leaves_store_intact(home, monkeypatch, tmp_path):
+    (home / "secrets").mkdir(parents=True)
+    (home / "secrets" / "keep.age").write_bytes(b"PRECIOUS")
+
+    def failing_run(cmd, **kw):
+        raise subprocess.CalledProcessError(1, cmd)
+
+    monkeypatch.setattr(archive.subprocess, "run", failing_run)
+    with pytest.raises(subprocess.CalledProcessError):
+        archive.restore_bundle(tmp_path / "bundle.age", home)
+    # the decrypt failed before any deletion — the existing secret survives
+    assert (home / "secrets" / "keep.age").read_bytes() == b"PRECIOUS"
