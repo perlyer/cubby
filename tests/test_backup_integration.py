@@ -15,11 +15,15 @@ CUBBY = REPO_ROOT / "cubby"
 
 
 def _run_under_pty(argv, env, passphrase, timeout=20):
-    """Run argv under a pseudo-terminal, typing `passphrase` at every prompt
-    that mentions 'passphrase'. Returns the process exit code.
+    """Run argv under a pseudo-terminal, typing `passphrase` once for each
+    'passphrase' prompt age emits. Returns the process exit code.
 
     Uses TIOCSCTTY to make the pty slave the controlling terminal of the child
     process so that age can open /dev/tty for passphrase input.
+
+    Output is accumulated into a buffer before counting prompts so that a
+    prompt fragmented across multiple reads (e.g. "Enter pass" / "phrase:")
+    is still detected correctly on loaded CI machines.
     """
     master, slave = pty.openpty()
 
@@ -32,6 +36,8 @@ def _run_under_pty(argv, env, passphrase, timeout=20):
         env=env, preexec_fn=_preexec, close_fds=True,
     )
     os.close(slave)
+    buf = b""
+    sent = 0
     try:
         while True:
             ready, _, _ = select.select([master], [], [], timeout)
@@ -43,8 +49,11 @@ def _run_under_pty(argv, env, passphrase, timeout=20):
                 break
             if not chunk:
                 break
-            if b"passphrase" in chunk.lower():
+            buf += chunk
+            prompts = buf.lower().count(b"passphrase")
+            while sent < prompts:
                 os.write(master, (passphrase + "\n").encode())
+                sent += 1
     finally:
         try:
             proc.wait(timeout=timeout)
