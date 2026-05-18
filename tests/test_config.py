@@ -76,3 +76,8 @@ def test_config_audit_defaults_false(tmp_path):
     cfg = config.Config(default_namespace="x")
     config.save_config(tmp_path, cfg)
     assert config.load_config(tmp_path).audit is False
+
+
+def test_config_without_audit_key_loads_false(tmp_path):
+    config.config_path(tmp_path).write_text('{"key_mode": "file", "namespaces": {}}')
+    assert config.load_config(tmp_path).audit is False
