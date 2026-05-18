@@ -138,6 +138,10 @@ def build_parser() -> argparse.ArgumentParser:
                          help="show the whole log, not just the last 20 lines")
     p_audit.set_defaults(func=commands.cmd_audit)
 
+    p_export = sub.add_parser("export", help="write a passphrase-encrypted backup")
+    p_export.add_argument("file", help="destination path for the backup bundle")
+    p_export.set_defaults(func=commands.cmd_export)
+
     return parser
 
 

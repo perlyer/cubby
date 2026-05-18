@@ -8,7 +8,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from cubby_tool import agents, audit, config, keyring, store, style
+from cubby_tool import agents, archive, audit, config, keyring, store, style
 
 
 def _resolve(args):
@@ -720,6 +720,18 @@ def cmd_doctor(args):
     summary = "all checks passed" if failed == 0 else f"{failed} check(s) failed"
     print(style.box(lines, title="cubby doctor", footer=summary))
     return 0 if failed == 0 else 2
+
+
+def cmd_export(args):
+    home = config.get_home()
+    if not config.config_path(home).exists():
+        print(style.fail("not initialized — run 'cubby init' first"),
+              file=sys.stderr)
+        return 4
+    dest = Path(args.file)
+    archive.export_bundle(home, dest)
+    print(style.ok(f"backup written to {dest}"))
+    return 0
 
 
 def cmd_audit(args):

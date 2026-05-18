@@ -39,6 +39,9 @@ GROUPS = [
     ("agents", [
         ("agent", "manage agent integrations"),
     ]),
+    ("backup", [
+        ("export", "write a passphrase-encrypted backup"),
+    ]),
     ("setup", [
         ("init", "first-run setup"),
         ("doctor", "check the install for problems"),
