@@ -173,10 +173,15 @@ model and how to report a vulnerability.
 ## Audit log
 
 `cubby` can keep a local log of every time a secret value leaves the store — a
-`cubby run` or a `cubby get --reveal`. It is **off by default**; turn it on with
-`cubby audit --enable`. The log records a timestamp, the event, the namespace,
-and (for `run`) the command — never a secret value. `cubby audit` shows it,
-`cubby audit --clear` erases it. It lives at `~/.config/cubby/audit.log`.
+`cubby run`, a `cubby get --reveal`, or a `cubby get --copy`. It is **off by
+default**; turn it on with `cubby audit --enable`. The log records a timestamp,
+the event, the namespace, and (for `run`) the command — never a secret value.
+`cubby audit` shows it, `cubby audit --clear` erases it. It lives at
+`~/.config/cubby/audit.log`.
+
+The log self-rotates at ~1 MB: when it reaches that size the current file is
+moved to `audit.log.1` and a fresh one is started, so it never grows without
+bound. `cubby audit --all` shows both the current log and the rotated history.
 
 ## Backup
 
