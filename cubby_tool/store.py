@@ -62,3 +62,10 @@ def rename_secret(home, namespace, old, new, identity_text, recipient) -> str:
     entries[new] = entries.pop(old)
     write_entries(home, namespace, entries, recipient)
     return "ok"
+
+
+def rename_namespace_file(home, old, new) -> None:
+    """Rename a namespace's encrypted file, if it exists."""
+    src = secrets_path(home, old)
+    if src.exists():
+        src.rename(secrets_path(home, new))

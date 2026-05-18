@@ -51,6 +51,21 @@ def cmd_ns(args):
         print(style.ok(f"default namespace set to '{args.name}'"))
         return 0
 
+    if args.ns_cmd == "rename":
+        if args.old not in cfg.namespaces:
+            print(style.fail(f"namespace '{args.old}' not found"), file=sys.stderr)
+            return 4
+        if args.new in cfg.namespaces:
+            print(style.fail(f"namespace '{args.new}' already exists"), file=sys.stderr)
+            return 4
+        cfg.namespaces[args.new] = cfg.namespaces.pop(args.old)
+        if cfg.default_namespace == args.old:
+            cfg.default_namespace = args.new
+        store.rename_namespace_file(home, args.old, args.new)
+        config.save_config(home, cfg)
+        print(style.ok(f"namespace '{args.old}' renamed to '{args.new}'"))
+        return 0
+
     # bare `cubby ns` or `cubby ns list` — list every namespace
     if not cfg.namespaces:
         print(style.fail("no namespaces — run `cubby ns add <name>`"), file=sys.stderr)

@@ -24,6 +24,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_ns_rm.add_argument("name", help="namespace name")
     p_ns_use = ns_sub.add_parser("use", help="set the default namespace")
     p_ns_use.add_argument("name", help="namespace name")
+    p_ns_rename = ns_sub.add_parser("rename", help="rename a namespace")
+    p_ns_rename.add_argument("old", help="current namespace name")
+    p_ns_rename.add_argument("new", help="new namespace name")
 
     p_init = sub.add_parser("init", help="first-run setup")
     p_init.add_argument("--key-mode", dest="key_mode", choices=["file", "keychain"],
