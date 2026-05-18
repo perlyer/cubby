@@ -89,3 +89,26 @@ def test_get_shows_an_override_env_var(inited_home, monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "PGPASSWORD" in out
     assert "override" in out
+
+
+def test_set_with_ttl_stores_expiry(inited_home, identity, monkeypatch, capsys):
+    monkeypatch.setattr("sys.stdin.read", lambda: "v\n")
+    assert cli.main(["set", "tok", "--stdin", "--ttl", "30d"]) == 0
+    from cubby_tool import store
+    entry = store.read_entries(inited_home, "test", identity)["tok"]
+    assert entry["ttl"] == "30d"
+    assert "expires" in entry
+
+
+def test_set_without_ttl_has_no_expiry(inited_home, identity, monkeypatch, capsys):
+    monkeypatch.setattr("sys.stdin.read", lambda: "v\n")
+    assert cli.main(["set", "tok", "--stdin"]) == 0
+    from cubby_tool import store
+    entry = store.read_entries(inited_home, "test", identity)["tok"]
+    assert "expires" not in entry and "ttl" not in entry
+
+
+def test_set_with_bad_ttl_returns_2(inited_home, monkeypatch, capsys):
+    monkeypatch.setattr("sys.stdin.read", lambda: "v\n")
+    assert cli.main(["set", "tok", "--stdin", "--ttl", "bogus"]) == 2
+    assert "invalid duration" in capsys.readouterr().err

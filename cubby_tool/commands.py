@@ -128,11 +128,14 @@ def cmd_set(args):
             print(style.fail(f"env var '{args.env}' already used by secret '{clash}'"),
                   file=sys.stderr)
             return 4
+    meta = None
+    if args.ttl is not None:
+        meta = {"ttl": args.ttl, "expires": _ttl_to_expires(args.ttl)}
     if args.stdin:
         value = sys.stdin.read().rstrip("\n")
     else:
         value = getpass.getpass(f"value for '{args.name}': ")
-    store.set_secret(home, ns, args.name, value, identity, recipient)
+    store.set_secret(home, ns, args.name, value, identity, recipient, meta=meta)
     if args.env:
         namespace.env_map[args.name] = args.env
         config.save_config(home, cfg)

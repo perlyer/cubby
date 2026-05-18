@@ -42,6 +42,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_set.add_argument("--stdin", action="store_true", help="read value from stdin")
     p_set.add_argument("--env", dest="env", default=None, metavar="VAR",
                        help="environment variable to inject this secret as")
+    p_set.add_argument("--ttl", dest="ttl", default=None, metavar="DURATION",
+                       help="expire the secret after a duration, e.g. 30d (h/d/w)")
     p_set.set_defaults(func=commands.cmd_set)
 
     p_map = sub.add_parser("map", help="show or change how secrets map to env vars")
