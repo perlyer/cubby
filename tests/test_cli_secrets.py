@@ -112,3 +112,21 @@ def test_set_with_bad_ttl_returns_2(inited_home, monkeypatch, capsys):
     monkeypatch.setattr("sys.stdin.read", lambda: "v\n")
     assert cli.main(["set", "tok", "--stdin", "--ttl", "bogus"]) == 2
     assert "invalid duration" in capsys.readouterr().err
+
+
+def test_get_shows_expires_and_rotated(inited_home, identity, recipient, capsys):
+    from cubby_tool import store
+    store.set_secret(inited_home, "test", "tok", "v", identity, recipient,
+                     meta={"ttl": "30d", "expires": "2099-01-01T00:00:00+00:00"})
+    assert cli.main(["get", "tok"]) == 0
+    out = capsys.readouterr().out
+    assert "expires:" in out and "2099-01-01" in out
+    assert "rotated:" in out and "never" in out
+
+
+def test_get_shows_never_when_no_ttl(inited_home, identity, recipient, capsys):
+    from cubby_tool import store
+    store.set_secret(inited_home, "test", "tok", "v", identity, recipient)
+    assert cli.main(["get", "tok"]) == 0
+    out = capsys.readouterr().out
+    assert "expires:" in out and "never" in out
