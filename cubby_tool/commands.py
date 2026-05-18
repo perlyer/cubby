@@ -1,6 +1,7 @@
 import getpass
 import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -407,3 +408,66 @@ def cmd_agent(args):
         return 0
     print(style.fail("usage: cubby agent {list|add|rm|refresh}"), file=sys.stderr)
     return 2
+
+
+def cmd_doctor(args):
+    home = config.get_home()
+    checks = []  # (status, message); status is "ok" | "warn" | "fail"
+
+    if shutil.which("age") and shutil.which("age-keygen"):
+        checks.append(("ok", "age and age-keygen on PATH"))
+    else:
+        checks.append(("fail", "age / age-keygen not found on PATH"))
+
+    cfg = None
+    cfg_path = config.config_path(home)
+    if not cfg_path.exists():
+        checks.append(("fail", f"no config at {cfg_path} — run 'cubby init'"))
+    else:
+        try:
+            cfg = config.load_config(home)
+            checks.append(("ok", "config.json parses"))
+        except (ValueError, json.JSONDecodeError) as e:
+            checks.append(("fail", f"config.json is invalid ({e})"))
+
+    identity = None
+    if cfg is not None:
+        try:
+            identity = keyring.load_identity(home, cfg.key_mode)
+            checks.append(("ok", f"age identity loads (key mode '{cfg.key_mode}')"))
+        except Exception as e:  # noqa: BLE001 - doctor reports any failure
+            checks.append(("fail", f"age identity does not load ({e})"))
+
+    if cfg is not None and identity is not None:
+        for ns_name, namespace in sorted(cfg.namespaces.items()):
+            try:
+                entries = store.read_entries(home, ns_name, identity)
+            except Exception as e:  # noqa: BLE001 - doctor reports any failure
+                checks.append(("fail", f"namespace '{ns_name}' does not decrypt ({e})"))
+                continue
+            checks.append(("ok", f"namespace '{ns_name}' decrypts "
+                                 f"({len(entries)} secret(s))"))
+            for mapped in namespace.env_map:
+                if mapped not in entries:
+                    checks.append(("warn", f"namespace '{ns_name}': env_map entry "
+                                           f"'{mapped}' points to a missing secret"))
+            seen = {}
+            for name in entries:
+                var = _resolve_env_var(namespace.env_map, name)
+                if var in seen:
+                    checks.append(("fail", f"namespace '{ns_name}': secrets "
+                                           f"'{seen[var]}' and '{name}' both map to "
+                                           f"env var '{var}'"))
+                else:
+                    seen[var] = name
+
+    marks = {
+        "ok": style.green(style.OK_MARK),
+        "warn": style.dim(style.DOT_MARK),
+        "fail": style.red(style.CROSS_MARK),
+    }
+    lines = [f" {marks[s]}  {m}" for s, m in checks]
+    failed = sum(1 for s, _ in checks if s == "fail")
+    summary = "all checks passed" if failed == 0 else f"{failed} check(s) failed"
+    print(style.box(lines, title="cubby doctor", footer=summary))
+    return 0 if failed == 0 else 2

@@ -98,6 +98,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_agent_rm.add_argument("name", help="agent name")
     agent_sub.add_parser("refresh", help="re-install every currently-installed agent integration")
 
+    p_doctor = sub.add_parser("doctor", help="check the cubby installation for problems")
+    p_doctor.set_defaults(func=commands.cmd_doctor)
+
     return parser
 
 
