@@ -49,6 +49,7 @@ def test_log_event_rotates_when_oversized(home, monkeypatch):
     assert audit.log_path(home).exists()
     assert (home / "audit.log.1").exists()
     assert audit.log_path(home).stat().st_size <= 200
+    assert (home / "audit.log.1").stat().st_size <= 200
 
 
 def test_read_all_includes_rotated_history(home, monkeypatch):
