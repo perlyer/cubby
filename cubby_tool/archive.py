@@ -28,11 +28,13 @@ def extract_tar(data: bytes) -> dict:
     """Unpack a tar archive into a {arcname: bytes} mapping. Rejects any
     member whose name is absolute or escapes the archive root."""
     members = {}
-    with tarfile.open(fileobj=io.BytesIO(data), mode="r") as tar:
+    with tarfile.open(fileobj=io.BytesIO(data), mode="r:") as tar:
         for info in tar.getmembers():
             name = info.name
             if name.startswith("/") or ".." in Path(name).parts:
                 raise ValueError(f"unsafe tar member path: {name}")
             if info.isfile():
-                members[name] = tar.extractfile(info).read()
+                fh = tar.extractfile(info)
+                if fh is not None:
+                    members[name] = fh.read()
     return members

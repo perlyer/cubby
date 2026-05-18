@@ -37,3 +37,10 @@ def test_extract_tar_rejects_absolute_path():
         tar.addfile(info, io.BytesIO(b"bad"))
     with pytest.raises(ValueError):
         archive.extract_tar(buf.getvalue())
+
+
+def test_extract_tar_rejects_compressed_archive():
+    import gzip
+    plain = archive.build_tar({"a": b"x"})
+    with pytest.raises(tarfile.ReadError):
+        archive.extract_tar(gzip.compress(plain))
