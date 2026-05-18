@@ -9,6 +9,10 @@ secrets reach the command, never the agent's context.**
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/)
 [![Dependencies: zero](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)
 
+<br>
+
+![cubby in action](assets/demo.gif)
+
 </div>
 
 ---
