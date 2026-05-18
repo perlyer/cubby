@@ -3,7 +3,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from cubby_tool import config, keyring, store
+from cubby_tool import audit, config, keyring, store
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CUBBY = REPO_ROOT / "cubby"
@@ -81,3 +81,20 @@ def test_run_no_warning_for_unexpired_secret(home, identity, recipient):
     _setup(home, identity, recipient)
     result = _run(home, ["run", "-n", "test", "--", "true"])
     assert "expired" not in result.stderr
+
+
+def test_run_writes_audit_log_when_audit_enabled(home, identity, recipient):
+    _setup(home, identity, recipient)
+    _run(home, ["audit", "--enable"])
+    result = _run(home, ["run", "-n", "test", "--", "true"])
+    assert result.returncode == 0
+    lines = audit.read_log(home)
+    assert any("run" in line and "test" in line for line in lines)
+
+
+def test_run_does_not_write_audit_log_when_audit_disabled(home, identity, recipient):
+    _setup(home, identity, recipient)
+    # audit is disabled by default — do not enable it
+    result = _run(home, ["run", "-n", "test", "--", "true"])
+    assert result.returncode == 0
+    assert audit.read_log(home) == []
