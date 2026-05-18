@@ -6,7 +6,7 @@ from cubby_tool import help as cubby_help, style
 def test_command_names_lists_every_command():
     assert set(cubby_help.command_names()) == {
         "set", "get", "list", "rm", "run", "import", "map", "rename", "rotate",
-        "ttl", "ns", "agent", "init", "doctor", "audit", "export",
+        "ttl", "ns", "agent", "init", "doctor", "audit", "export", "restore",
     }
 
 
@@ -15,7 +15,7 @@ def test_render_help_lists_every_command_and_group(monkeypatch):
     out = cubby_help.render_help()
     for name in cubby_help.command_names():
         assert name in out
-    for group in ("secrets", "namespaces", "agents", "setup"):
+    for group in ("secrets", "namespaces", "agents", "backup", "setup"):
         assert group in out
     assert "usage: cubby" in out
     assert "command details" in out

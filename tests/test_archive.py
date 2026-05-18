@@ -76,3 +76,27 @@ def test_export_bundle_invokes_age_with_the_tar(inited_home, identity, recipient
     assert "--passphrase" in captured["cmd"]
     members = archive.extract_tar(captured["input"])
     assert "identity" in members and "config.json" in members
+
+
+def test_restore_bundle_unpacks_into_home(home, monkeypatch, tmp_path):
+    members = {
+        "identity": b"AGE-SECRET-KEY-FAKE",
+        "config.json": b'{"default_namespace": "test", "key_mode": "file", '
+                       b'"audit": false, "namespaces": {"test": {"cwd_prefix": '
+                       b'null, "env_map": {}}}}',
+        "secrets/test.age": b"\x01\x02\x03",
+    }
+    tar_bytes = archive.build_tar(members)
+
+    def fake_run(cmd, **kw):
+        assert cmd[0] == "age" and "--decrypt" in cmd
+        class R:
+            stdout = tar_bytes
+            returncode = 0
+        return R()
+
+    monkeypatch.setattr(archive.subprocess, "run", fake_run)
+    archive.restore_bundle(tmp_path / "bundle.age", home)
+    assert (home / "identity").read_bytes() == b"AGE-SECRET-KEY-FAKE"
+    assert (home / "secrets" / "test.age").read_bytes() == b"\x01\x02\x03"
+    assert oct((home / "identity").stat().st_mode & 0o777) == "0o600"

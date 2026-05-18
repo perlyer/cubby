@@ -734,6 +734,21 @@ def cmd_export(args):
     return 0
 
 
+def cmd_restore(args):
+    home = config.get_home()
+    src = Path(args.file)
+    if not src.exists():
+        print(style.fail(f"restore: file not found: {args.file}"), file=sys.stderr)
+        return 2
+    if config.config_path(home).exists() and not args.force:
+        print(style.fail(f"restore: a store already exists at {home} "
+                         f"— pass --force to overwrite"), file=sys.stderr)
+        return 4
+    archive.restore_bundle(src, home)
+    print(style.ok(f"store restored to {home}"))
+    return 0
+
+
 def cmd_audit(args):
     home = config.get_home()
     if not config.config_path(home).exists():

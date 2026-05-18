@@ -142,6 +142,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_export.add_argument("file", help="destination path for the backup bundle")
     p_export.set_defaults(func=commands.cmd_export)
 
+    p_restore = sub.add_parser("restore", help="restore the store from a backup bundle")
+    p_restore.add_argument("file", help="path to the backup bundle")
+    p_restore.add_argument("--force", action="store_true",
+                           help="overwrite an existing store")
+    p_restore.set_defaults(func=commands.cmd_restore)
+
     return parser
 
 

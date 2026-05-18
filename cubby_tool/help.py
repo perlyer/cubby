@@ -41,6 +41,7 @@ GROUPS = [
     ]),
     ("backup", [
         ("export", "write a passphrase-encrypted backup"),
+        ("restore", "restore from a backup bundle"),
     ]),
     ("setup", [
         ("init", "first-run setup"),

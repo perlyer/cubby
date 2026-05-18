@@ -48,6 +48,25 @@ def export_bundle(home: Path, dest: Path) -> None:
                    input=tar_bytes, check=True)
 
 
+def restore_bundle(src: Path, home: Path) -> None:
+    """Decrypt a backup bundle and unpack it into `home`. `age` prompts for
+    the passphrase. The restored store always uses file key-mode."""
+    result = subprocess.run(["age", "--decrypt", str(src)],
+                            capture_output=True, check=True)
+    members = extract_tar(result.stdout)
+    (home / "secrets").mkdir(parents=True, exist_ok=True)
+    for arcname, data in members.items():
+        target = home / arcname
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+    identity_file = home / "identity"
+    if identity_file.exists():
+        identity_file.chmod(0o600)
+    cfg = config.load_config(home)
+    cfg.key_mode = "file"
+    config.save_config(home, cfg)
+
+
 def extract_tar(data: bytes) -> dict:
     """Unpack a tar archive into a {arcname: bytes} mapping. Rejects any
     member whose name is absolute or escapes the archive root."""
