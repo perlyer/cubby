@@ -96,13 +96,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("command", nargs=argparse.REMAINDER, help="the command to run, after --")
     p_run.set_defaults(func=commands.cmd_run)
 
-    p_import = sub.add_parser("import", help="import secrets from .env or AWS Secrets Manager")
+    p_import = sub.add_parser("import", help="bulk import secrets from another source")
+    p_import.add_argument("source_type", metavar="type",
+                          choices=["dotenv", "aws", "json", "1password", "ns"],
+                          help="source type: dotenv, aws, json, 1password, ns")
+    p_import.add_argument("source",
+                          help="a file path, AWS secret id, 1Password vault, or namespace")
     p_import.add_argument("-n", "--namespace", default=None, help="namespace to use")
-    p_import.add_argument("--from-env", dest="from_env", default=None, metavar="PATH",
-                          help="path to a .env file to import")
-    p_import.add_argument("--from-aws", dest="from_aws", default=None, metavar="SECRET_ID",
-                          help="AWS Secrets Manager secret id to import")
-    p_import.add_argument("--region", default=None, help="AWS region (for --from-aws)")
+    p_import.add_argument("--region", default=None, help="AWS region (for type 'aws')")
     p_import.set_defaults(func=commands.cmd_import)
 
     p_agent = sub.add_parser("agent", help="manage agent integrations")
