@@ -74,19 +74,21 @@ uncommitted changes. Your secret store in `~/.config/cubby/` is never touched.
 |---------|--------------|
 | `cubby init` | First-run setup — generates the age key, creates the config |
 | `cubby set <name>` | Store a secret (hidden prompt, or `--stdin`); `--env VAR` sets its env var |
-| `cubby get <name>` | Show metadata only — `--reveal` prints plaintext (humans only) |
+| `cubby get <name>` | Show metadata — `--reveal` prints plaintext, `--copy` copies it (humans only) |
 | `cubby list` | List secret names in the namespace |
 | `cubby rm <name>` | Delete a secret |
 | `cubby rename <old> <new>` | Rename a secret |
 | `cubby rotate <name>` | Replace a secret's value (tracks a rotation count) |
 | `cubby ttl [<name> [<dur>]]` | Show or change a secret's expiry |
-| `cubby run -- <cmd>` | Run a command with the namespace's secrets in its environment |
+| `cubby run -- <cmd>` | Run a command with the namespace's secrets in its environment (`--only`/`--except` to scope) |
 | `cubby import <type> <src>` | Bulk import — `dotenv`, `aws`, `json`, `1password`, `ns` |
 | `cubby map` | Show or change the environment variable each secret is injected as |
 | `cubby ns add\|list\|rm\|use\|rename` | Manage namespaces |
 | `cubby agent add\|list\|rm\|refresh` | Manage AI-agent integrations |
 | `cubby doctor` | Check the install, key, config and namespaces for problems |
 | `cubby audit` | Show or manage the opt-in audit log |
+| `cubby export <file>` | Write a passphrase-encrypted backup of the whole store |
+| `cubby restore <file>` | Restore the store from a backup bundle |
 
 A typical session:
 
@@ -158,8 +160,8 @@ Claude Code users can alternatively use the native plugin marketplace:
 ```
 
 The integration is a convention — it *asks* the agent to use `cubby run`. For an
-enforced guardrail, also block `cubby get --reveal` in your agent's permission system;
-see [Hardening for AI agents](SECURITY.md#hardening-for-ai-agents).
+enforced guardrail, also block `cubby get --reveal` and `cubby get --copy` in your
+agent's permission system; see [Hardening for AI agents](SECURITY.md#hardening-for-ai-agents).
 
 ## Security
 
@@ -175,6 +177,17 @@ model and how to report a vulnerability.
 `cubby audit --enable`. The log records a timestamp, the event, the namespace,
 and (for `run`) the command — never a secret value. `cubby audit` shows it,
 `cubby audit --clear` erases it. It lives at `~/.config/cubby/audit.log`.
+
+## Backup
+
+Losing the age identity makes every namespace unrecoverable, so back the store
+up. `cubby export backup.age` writes a single passphrase-encrypted bundle
+containing the identity, config, and every namespace; `age` prompts for the
+passphrase. Because the bundle is passphrase-encrypted it is safe to store
+off-machine.
+
+`cubby restore backup.age` rebuilds the store from a bundle on a fresh machine.
+It refuses to overwrite an existing store unless you pass `--force`.
 
 ## Contributing
 

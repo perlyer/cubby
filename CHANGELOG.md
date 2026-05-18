@@ -4,6 +4,20 @@ All notable changes to `cubby` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — 2026-05-18
+
+### Added
+- `cubby --version` — print the installed version.
+- `cubby run --only <names>` / `--except <names>` — inject only (or all but)
+  the named secrets, instead of the whole namespace.
+- `cubby get --copy` — copy a secret to the system clipboard without printing
+  it. Recorded in the audit log as a `copy` event.
+- `cubby export` / `cubby restore` — write and restore a passphrase-encrypted
+  backup of the whole store (`age` prompts for the passphrase).
+- The audit log now rotates: when it passes ~1 MB the current log is moved to
+  `audit.log.1` and a fresh one is started. `cubby audit --all` shows both.
+- A GitHub Actions workflow runs the test suite on Python 3.11–3.13.
+
 ## [0.5.0] — 2026-05-18
 
 ### Added
@@ -109,3 +123,4 @@ First release.
 [0.3.1]: https://github.com/perlyer/cubby/releases/tag/v0.3.1
 [0.4.0]: https://github.com/perlyer/cubby/releases/tag/v0.4.0
 [0.5.0]: https://github.com/perlyer/cubby/releases/tag/v0.5.0
+[0.6.0]: https://github.com/perlyer/cubby/releases/tag/v0.6.0

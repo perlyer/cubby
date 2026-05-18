@@ -18,9 +18,11 @@ precise about what that does and does not buy you.
 - **Wrong-namespace leakage.** Namespace resolution matches working-directory prefixes
   on path boundaries, so `/p/project` is never treated as part of `/p/proj`.
 - **A record of secret access.** With the opt-in audit log enabled
-  (`cubby audit --enable`), every `cubby run` and `cubby get --reveal` appends a
-  timestamped line to `~/.config/cubby/audit.log`. The log records the event,
-  namespace, and command — never a secret value.
+  (`cubby audit --enable`), every `cubby run`, `cubby get --reveal`, and
+  `cubby get --copy` appends a timestamped line to `~/.config/cubby/audit.log`.
+  The log records the event, namespace, and command — never a secret value.
+  The log self-rotates at ~1 MB (current log moves to `audit.log.1`, a fresh one
+  is started), so it never grows without bound; `cubby audit --all` shows both files.
 
 ### What cubby does NOT protect against
 
@@ -45,24 +47,27 @@ transcripts by accident — but it trusts your machine and the code your agent r
 
 ## Hardening for AI agents
 
-`cubby get --reveal` prints a secret in plaintext — it is the one deliberate escape
-hatch, meant for a human at a terminal. The `cubby agent` integration *asks* an agent
-not to use it, but that is a convention, not a wall.
+`cubby get --reveal` prints a secret in plaintext, and `cubby get --copy` copies it to
+the system clipboard — both are deliberate escape hatches, meant for a human at a
+terminal. The `cubby agent` integration *asks* an agent not to use either, but that is
+a convention, not a wall.
 
 Where your agent has a permission system, turn the convention into an enforced rule.
-For **Claude Code**, add a deny rule to `~/.claude/settings.json`:
+For **Claude Code**, add deny rules to `~/.claude/settings.json`:
 
 ```json
 {
   "permissions": {
-    "deny": ["Bash(cubby get* --reveal*)"]
+    "deny": ["Bash(cubby get* --reveal*)", "Bash(cubby get* --copy*)"]
   }
 }
 ```
 
-With this in place Claude Code refuses to run any `cubby get … --reveal` invocation —
-the agent cannot reveal a secret even if instructed to. Other agents that support
-command allow/deny lists can be locked down the same way.
+With this in place Claude Code refuses to run any `cubby get … --reveal` or
+`cubby get … --copy` invocation — the agent cannot disclose a secret value even if
+instructed to. (`--copy` is blocked for the same reason as `--reveal`: it routes the
+plaintext value to the clipboard, where another process could read it.) Other agents
+that support command allow/deny lists can be locked down the same way.
 
 This does not close every hole — an agent that runs arbitrary code can still read the
 identity file or `cubby run` a command that exfiltrates the value (see above) — but it
