@@ -1,0 +1,38 @@
+"""Backup bundles — the cubby store packed as a tar archive.
+
+`build_tar` / `extract_tar` are pure (a {arcname: bytes} mapping ↔ tar bytes).
+`export_bundle` / `restore_bundle` add the age passphrase-encryption layer by
+shelling out to the `age` CLI, which prompts for the passphrase itself.
+"""
+
+import io
+import subprocess
+import tarfile
+from pathlib import Path
+
+from cubby_tool import config, keyring
+
+
+def build_tar(members: dict) -> bytes:
+    """Pack a {arcname: bytes} mapping into an uncompressed tar archive."""
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w") as tar:
+        for arcname, data in sorted(members.items()):
+            info = tarfile.TarInfo(name=arcname)
+            info.size = len(data)
+            tar.addfile(info, io.BytesIO(data))
+    return buf.getvalue()
+
+
+def extract_tar(data: bytes) -> dict:
+    """Unpack a tar archive into a {arcname: bytes} mapping. Rejects any
+    member whose name is absolute or escapes the archive root."""
+    members = {}
+    with tarfile.open(fileobj=io.BytesIO(data), mode="r") as tar:
+        for info in tar.getmembers():
+            name = info.name
+            if name.startswith("/") or ".." in Path(name).parts:
+                raise ValueError(f"unsafe tar member path: {name}")
+            if info.isfile():
+                members[name] = tar.extractfile(info).read()
+    return members
