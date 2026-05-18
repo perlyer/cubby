@@ -11,8 +11,9 @@ All notable changes to `cubby` are documented here. The format follows
   move a single secret between namespaces (its env-var mapping moves with it).
 - `cubby completion {bash,zsh,fish}` — print a shell completion script for
   cubby's command names.
-- cubby is now pip-installable — `pipx install cubby` (a `pyproject.toml` with a
-  `cubby` console entry point). The `git clone` + `install.sh` path is unchanged.
+- cubby is now pip-installable — `pipx install cubby-secrets` (a `pyproject.toml`
+  with a `cubby` console entry point; the PyPI distribution is `cubby-secrets`
+  because `cubby` was taken). The `git clone` + `install.sh` path is unchanged.
 
 ### Fixed
 - `cubby restore --force` no longer leaves stale namespace files from the

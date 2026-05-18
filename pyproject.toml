@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "cubby"
+name = "cubby-secrets"
 dynamic = ["version"]
 description = "Encrypted, namespaced secret store for AI coding agents"
 readme = "README.md"

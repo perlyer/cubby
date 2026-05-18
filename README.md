@@ -61,12 +61,14 @@ automatically at login; the default `--key-mode file` keeps it in
 ### Install from PyPI
 
 ```bash
-pipx install cubby
+pipx install cubby-secrets
 ```
 
-This puts the `cubby` command on your `PATH`. It does not set up the AI-agent
-integration — run `cubby agent add <agent>` for that, or use the `git clone` +
-`./install.sh` flow above, which does it for you.
+This puts the `cubby` command on your `PATH` (the distribution is named
+`cubby-secrets` because `cubby` was already taken on PyPI; the command itself is
+`cubby`). It does not set up the AI-agent integration — run `cubby agent add
+<agent>` for that, or use the `git clone` + `./install.sh` flow above, which does
+it for you.
 
 ## Updating
 
