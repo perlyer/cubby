@@ -1,6 +1,13 @@
 from cubby_tool import cli, config, audit, store
 
 
+def test_audit_no_config_exits_4(home, monkeypatch, capsys):
+    monkeypatch.setenv("CUBBY_HOME", str(home))
+    assert cli.main(["audit", "--enable"]) == 4
+    assert "not initialized" in capsys.readouterr().err
+    assert not (home / "config.json").exists()
+
+
 def test_audit_enable_disable(inited_home, capsys):
     assert cli.main(["audit", "--enable"]) == 0
     assert config.load_config(inited_home).audit is True

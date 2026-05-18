@@ -688,6 +688,9 @@ def cmd_doctor(args):
 
 def cmd_audit(args):
     home = config.get_home()
+    if not config.config_path(home).exists():
+        print(style.fail("not initialized — run 'cubby init' first"), file=sys.stderr)
+        return 4
     cfg = config.load_config(home)
 
     if sum(bool(f) for f in (args.enable, args.disable, args.clear)) > 1:

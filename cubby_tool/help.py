@@ -27,7 +27,7 @@ GROUPS = [
         ("list", "list secret names"),
         ("rm", "delete a secret"),
         ("run", "run a command with secrets in env"),
-        ("import", "bulk import from .env / AWS"),
+        ("import", "bulk import secrets from another source"),
         ("map", "show or change secret env vars"),
         ("rename", "rename a secret"),
         ("rotate", "replace a secret's value"),
