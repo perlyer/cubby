@@ -143,6 +143,33 @@ def cmd_set(args):
     return 0
 
 
+def cmd_rotate(args):
+    home, cfg, ns, _ = _resolve(args)
+    identity = keyring.load_identity(home, cfg.key_mode)
+    recipient = keyring.public_key(identity)
+    entries = store.read_entries(home, ns, identity)
+    if args.name not in entries:
+        print(style.fail(f"secret '{args.name}' not found in namespace '{ns}'"),
+              file=sys.stderr)
+        return 4
+    prev = entries[args.name]
+    if args.ttl == "none":
+        meta = {}
+    elif args.ttl is not None:
+        meta = {"ttl": args.ttl, "expires": _ttl_to_expires(args.ttl)}
+    elif prev.get("ttl"):
+        meta = {"ttl": prev["ttl"], "expires": _ttl_to_expires(prev["ttl"])}
+    else:
+        meta = {}
+    if args.stdin:
+        value = sys.stdin.read().rstrip("\n")
+    else:
+        value = getpass.getpass(f"new value for '{args.name}': ")
+    store.rotate_secret(home, ns, args.name, value, identity, recipient, meta=meta)
+    print(style.ok(f"secret '{args.name}' rotated in namespace '{ns}'"))
+    return 0
+
+
 def cmd_map(args):
     home, cfg, ns, _ = _resolve(args)
     namespace = cfg.namespaces.get(ns, config.Namespace())

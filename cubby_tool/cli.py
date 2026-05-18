@@ -76,6 +76,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_rename.add_argument("-n", "--namespace", default=None, help="namespace to use")
     p_rename.set_defaults(func=commands.cmd_rename)
 
+    p_rotate = sub.add_parser("rotate", help="replace a secret's value")
+    p_rotate.add_argument("name", help="secret name")
+    p_rotate.add_argument("-n", "--namespace", default=None, help="namespace to use")
+    p_rotate.add_argument("--stdin", action="store_true", help="read value from stdin")
+    p_rotate.add_argument("--ttl", dest="ttl", default=None, metavar="DURATION",
+                          help="set/replace the expiry (h/d/w), or 'none' to clear")
+    p_rotate.set_defaults(func=commands.cmd_rotate)
+
     p_run = sub.add_parser("run", help="run a command with namespace secrets in its env")
     p_run.add_argument("-n", "--namespace", default=None, help="namespace to use")
     p_run.add_argument("command", nargs=argparse.REMAINDER, help="the command to run, after --")
