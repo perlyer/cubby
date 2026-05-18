@@ -747,7 +747,7 @@ def cmd_audit(args):
             print(style.dim("audit log is already empty"))
         return 0
 
-    lines = audit.read_log(home)
+    lines = audit.read_all(home) if args.show_all else audit.read_log(home)
     if not lines:
         print(style.dim("no audit entries"))
         return 0

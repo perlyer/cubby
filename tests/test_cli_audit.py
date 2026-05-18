@@ -50,3 +50,11 @@ def test_reveal_not_logged_when_audit_off(inited_home, identity, recipient, caps
     store.set_secret(inited_home, "test", "tok", "v", identity, recipient)
     assert cli.main(["get", "tok", "--reveal"]) == 0
     assert audit.read_log(inited_home) == []
+
+
+def test_audit_all_shows_rotated_history(inited_home, monkeypatch, capsys):
+    monkeypatch.setattr(audit, "MAX_LOG_BYTES", 200)
+    for i in range(40):
+        audit.log_event(inited_home, True, "run", "test", f"command-number-{i}")
+    assert cli.main(["audit", "--all"]) == 0
+    assert "command-number-0" in capsys.readouterr().out
