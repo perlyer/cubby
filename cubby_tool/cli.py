@@ -96,6 +96,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_run = sub.add_parser("run", help="run a command with namespace secrets in its env")
     p_run.add_argument("-n", "--namespace", default=None, help="namespace to use")
     p_run.add_argument("command", nargs=argparse.REMAINDER, help="the command to run, after --")
+    run_scope = p_run.add_mutually_exclusive_group()
+    run_scope.add_argument("--only", default=None, metavar="NAMES",
+                           help="inject only these secrets (comma-separated)")
+    run_scope.add_argument("--except", dest="exclude", default=None, metavar="NAMES",
+                           help="inject every secret except these (comma-separated)")
     p_run.set_defaults(func=commands.cmd_run)
 
     p_import = sub.add_parser("import", help="bulk import secrets from another source")

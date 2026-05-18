@@ -437,6 +437,22 @@ def cmd_run(args):
         return 2
     identity = keyring.load_identity(home, cfg.key_mode)
     entries = store.read_entries(home, ns, identity)
+    if args.only is not None:
+        wanted = [n.strip() for n in args.only.split(",") if n.strip()]
+        missing = [n for n in wanted if n not in entries]
+        if missing:
+            print(style.fail(f"run: no such secret(s): {', '.join(missing)}"),
+                  file=sys.stderr)
+            return 4
+        entries = {n: entries[n] for n in wanted}
+    elif args.exclude is not None:
+        unwanted = [n.strip() for n in args.exclude.split(",") if n.strip()]
+        missing = [n for n in unwanted if n not in entries]
+        if missing:
+            print(style.fail(f"run: no such secret(s): {', '.join(missing)}"),
+                  file=sys.stderr)
+            return 4
+        entries = {n: e for n, e in entries.items() if n not in unwanted}
     env_map = cfg.namespaces.get(ns, config.Namespace()).env_map
     child_env = dict(os.environ)
     for name, entry in entries.items():
