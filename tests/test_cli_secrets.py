@@ -48,3 +48,44 @@ def test_get_metadata_shows_secret_title(inited_home, monkeypatch, capsys):
     capsys.readouterr()
     assert cli.main(["get", "db"]) == 0
     assert "secret 'db'" in capsys.readouterr().out
+
+
+def test_set_with_env_records_the_override(inited_home, monkeypatch):
+    monkeypatch.setattr(getpass, "getpass", lambda *a, **k: "s3cret")
+    assert cli.main(["set", "db", "--env", "PGPASSWORD"]) == 0
+    from cubby_tool import config
+    cfg = config.load_config(inited_home)
+    assert cfg.namespaces["test"].env_map["db"] == "PGPASSWORD"
+
+
+def test_set_with_clashing_env_returns_4(inited_home, monkeypatch, capsys):
+    monkeypatch.setattr(getpass, "getpass", lambda *a, **k: "s3cret")
+    cli.main(["set", "alpha"])               # default env var ALPHA
+    capsys.readouterr()
+    assert cli.main(["set", "beta", "--env", "ALPHA"]) == 4
+    err = capsys.readouterr().err
+    assert "already used by secret 'alpha'" in err
+    # the clash must be atomic — beta was not stored
+    capsys.readouterr()
+    assert cli.main(["list"]) == 0
+    assert "beta" not in capsys.readouterr().out
+
+
+def test_get_shows_the_default_env_var(inited_home, monkeypatch, capsys):
+    monkeypatch.setattr(getpass, "getpass", lambda *a, **k: "s3cret")
+    cli.main(["set", "db-pass"])
+    capsys.readouterr()
+    assert cli.main(["get", "db-pass"]) == 0
+    out = capsys.readouterr().out
+    assert "DB_PASS" in out
+    assert "default" in out
+
+
+def test_get_shows_an_override_env_var(inited_home, monkeypatch, capsys):
+    monkeypatch.setattr(getpass, "getpass", lambda *a, **k: "s3cret")
+    cli.main(["set", "db-pass", "--env", "PGPASSWORD"])
+    capsys.readouterr()
+    assert cli.main(["get", "db-pass"]) == 0
+    out = capsys.readouterr().out
+    assert "PGPASSWORD" in out
+    assert "override" in out

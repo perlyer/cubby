@@ -4,6 +4,23 @@ All notable changes to `cubby` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] — 2026-05-18
+
+### Added
+
+- `cubby map` — show or change the environment variable each secret is injected
+  as under `cubby run`.
+- `cubby set --env VAR` — store a secret and map it to `VAR` in one step.
+- `cubby rename` (secrets) and `cubby ns rename` (namespaces).
+- `cubby doctor` — a health check for the install, key, config and namespaces.
+- `cubby get` now shows the environment variable a secret is injected as.
+
+### Changed
+
+- The default environment-variable name for an unmapped secret dropped its
+  `CUBBY_` prefix — `cubby run` now injects the secret `apitoken` as `APITOKEN`
+  (was `CUBBY_APITOKEN`). Secrets with an explicit `env_map` entry are unaffected.
+
 ## [0.3.1] — 2026-05-17
 
 ### Changed
@@ -68,3 +85,4 @@ First release.
 [0.2.0]: https://github.com/perlyer/cubby/releases/tag/v0.2.0
 [0.3.0]: https://github.com/perlyer/cubby/releases/tag/v0.3.0
 [0.3.1]: https://github.com/perlyer/cubby/releases/tag/v0.3.1
+[0.4.0]: https://github.com/perlyer/cubby/releases/tag/v0.4.0

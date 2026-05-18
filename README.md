@@ -73,14 +73,17 @@ uncommitted changes. Your secret store in `~/.config/cubby/` is never touched.
 | Command | What it does |
 |---------|--------------|
 | `cubby init` | First-run setup — generates the age key, creates the config |
-| `cubby set <name>` | Store a secret (hidden prompt, or `--stdin`) |
+| `cubby set <name>` | Store a secret (hidden prompt, or `--stdin`); `--env VAR` sets its env var |
 | `cubby get <name>` | Show metadata only — `--reveal` prints plaintext (humans only) |
 | `cubby list` | List secret names in the namespace |
 | `cubby rm <name>` | Delete a secret |
+| `cubby rename <old> <new>` | Rename a secret |
 | `cubby run -- <cmd>` | Run a command with the namespace's secrets in its environment |
 | `cubby import` | Bulk import from a `.env` file or AWS Secrets Manager |
-| `cubby ns add\|list\|rm` | Manage namespaces |
-| `cubby agent add\|list\|rm` | Manage AI-agent integrations |
+| `cubby map` | Show or change the environment variable each secret is injected as |
+| `cubby ns add\|list\|rm\|use\|rename` | Manage namespaces |
+| `cubby agent add\|list\|rm\|refresh` | Manage AI-agent integrations |
+| `cubby doctor` | Check the install, key, config and namespaces for problems |
 
 A typical session:
 
@@ -92,6 +95,7 @@ cubby: secret 'db-password' set in namespace 'work'
 $ cubby get db-password
 name:      db-password
 namespace: work
+env var:   DB_PASSWORD (default)
 length:    18
 updated:   2026-05-17T09:14:02+00:00
 
@@ -114,9 +118,11 @@ cubby ns add work --cwd-prefix ~/projects/work
 cubby ns                  # show the active namespace and why it was chosen
 ```
 
-Each namespace is a separate encrypted file. The per-namespace `env_map` (which
-environment variable each secret becomes under `cubby run`, e.g.
-`"db-password": "PGPASSWORD"`) is edited in `~/.config/cubby/config.json`.
+Each namespace is a separate encrypted file. Under `cubby run` every secret is
+injected as an environment variable — by default the `UPPER_SNAKE` of its name
+(`db-password` → `DB_PASSWORD`). To inject it under a different name, use
+`cubby set <name> --env VAR` or `cubby map <name> VAR` (e.g. `db-password` →
+`PGPASSWORD`); `cubby map` with no arguments lists the current mapping.
 
 ## Agent integration
 

@@ -24,6 +24,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_ns_rm.add_argument("name", help="namespace name")
     p_ns_use = ns_sub.add_parser("use", help="set the default namespace")
     p_ns_use.add_argument("name", help="namespace name")
+    p_ns_rename = ns_sub.add_parser("rename", help="rename a namespace")
+    p_ns_rename.add_argument("old", help="current namespace name")
+    p_ns_rename.add_argument("new", help="new namespace name")
 
     p_init = sub.add_parser("init", help="first-run setup")
     p_init.add_argument("--key-mode", dest="key_mode", choices=["file", "keychain"],
@@ -37,7 +40,18 @@ def build_parser() -> argparse.ArgumentParser:
     p_set.add_argument("name", help="secret name")
     p_set.add_argument("-n", "--namespace", default=None, help="namespace to use")
     p_set.add_argument("--stdin", action="store_true", help="read value from stdin")
+    p_set.add_argument("--env", dest="env", default=None, metavar="VAR",
+                       help="environment variable to inject this secret as")
     p_set.set_defaults(func=commands.cmd_set)
+
+    p_map = sub.add_parser("map", help="show or change how secrets map to env vars")
+    p_map.add_argument("name", nargs="?", default=None, help="secret name")
+    p_map.add_argument("var", nargs="?", default=None, metavar="VAR",
+                       help="environment variable to inject the secret as")
+    p_map.add_argument("-n", "--namespace", default=None, help="namespace to use")
+    p_map.add_argument("--reset", action="store_true",
+                       help="drop the override, revert to the default name")
+    p_map.set_defaults(func=commands.cmd_map)
 
     p_get = sub.add_parser("get", help="show secret metadata")
     p_get.add_argument("name", help="secret name")
@@ -53,6 +67,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_rm.add_argument("name", help="secret name")
     p_rm.add_argument("-n", "--namespace", default=None, help="namespace to use")
     p_rm.set_defaults(func=commands.cmd_rm)
+
+    p_rename = sub.add_parser("rename", help="rename a secret")
+    p_rename.add_argument("old", help="current secret name")
+    p_rename.add_argument("new", help="new secret name")
+    p_rename.add_argument("-n", "--namespace", default=None, help="namespace to use")
+    p_rename.set_defaults(func=commands.cmd_rename)
 
     p_run = sub.add_parser("run", help="run a command with namespace secrets in its env")
     p_run.add_argument("-n", "--namespace", default=None, help="namespace to use")
@@ -77,6 +97,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_agent_rm = agent_sub.add_parser("rm", help="remove integration for an agent")
     p_agent_rm.add_argument("name", help="agent name")
     agent_sub.add_parser("refresh", help="re-install every currently-installed agent integration")
+
+    p_doctor = sub.add_parser("doctor", help="check the cubby installation for problems")
+    p_doctor.set_defaults(func=commands.cmd_doctor)
 
     return parser
 

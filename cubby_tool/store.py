@@ -50,3 +50,22 @@ def delete_secret(home, namespace, name, identity_text, recipient) -> bool:
 
 def list_names(home, namespace, identity_text) -> list:
     return sorted(read_entries(home, namespace, identity_text).keys())
+
+
+def rename_secret(home, namespace, old, new, identity_text, recipient) -> str:
+    """Rename a secret entry. Returns 'ok', 'missing', or 'exists'."""
+    entries = read_entries(home, namespace, identity_text)
+    if old not in entries:
+        return "missing"
+    if new in entries:
+        return "exists"
+    entries[new] = entries.pop(old)
+    write_entries(home, namespace, entries, recipient)
+    return "ok"
+
+
+def rename_namespace_file(home, old, new) -> None:
+    """Rename a namespace's encrypted file, if it exists."""
+    src = secrets_path(home, old)
+    if src.exists():
+        src.rename(secrets_path(home, new))
