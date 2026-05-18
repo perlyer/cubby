@@ -8,7 +8,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from cubby_tool import agents, audit, config, keyring, store, style
+from cubby_tool import agents, archive, audit, config, keyring, store, style
 
 
 def _resolve(args):
@@ -290,6 +290,14 @@ def cmd_get(args):
         audit.log_event(home, cfg.audit, "reveal", ns, args.name)
         print("WARNING: revealing secret plaintext to stdout", file=sys.stderr)
         print(entry["value"])
+    elif args.copy:
+        try:
+            tool = _copy_to_clipboard(entry["value"])
+        except RuntimeError as e:
+            print(style.fail(str(e)), file=sys.stderr)
+            return 2
+        audit.log_event(home, cfg.audit, "copy", ns, args.name)
+        print(style.ok(f"copied '{args.name}' to clipboard ({tool})"))
     else:
         namespace = cfg.namespaces.get(ns, config.Namespace())
         var = _resolve_env_var(namespace.env_map, args.name)
@@ -415,6 +423,18 @@ def _resolve_env_var(env_map: dict, secret_name: str) -> str:
     return env_map.get(secret_name, _env_var_name(secret_name))
 
 
+def _copy_to_clipboard(text: str) -> str:
+    """Copy `text` to the system clipboard via the first available tool.
+    Returns the tool name; raises RuntimeError if none is found."""
+    tools = [["pbcopy"], ["wl-copy"], ["xclip", "-selection", "clipboard"]]
+    for tool in tools:
+        if shutil.which(tool[0]):
+            subprocess.run(tool, input=text, text=True, check=True)
+            return tool[0]
+    raise RuntimeError("no clipboard tool found "
+                       "(install pbcopy, wl-copy, or xclip)")
+
+
 def _env_var_clash(env_map: dict, secret_names, target_var: str, this_secret: str):
     """If a secret other than this_secret already resolves to target_var,
     return that secret's name; else None."""
@@ -437,6 +457,22 @@ def cmd_run(args):
         return 2
     identity = keyring.load_identity(home, cfg.key_mode)
     entries = store.read_entries(home, ns, identity)
+    if args.only is not None:
+        wanted = [n.strip() for n in args.only.split(",") if n.strip()]
+        missing = [n for n in wanted if n not in entries]
+        if missing:
+            print(style.fail(f"run: no such secret(s): {', '.join(missing)}"),
+                  file=sys.stderr)
+            return 4
+        entries = {n: entries[n] for n in wanted}
+    elif args.exclude is not None:
+        unwanted = [n.strip() for n in args.exclude.split(",") if n.strip()]
+        missing = [n for n in unwanted if n not in entries]
+        if missing:
+            print(style.fail(f"run: no such secret(s): {', '.join(missing)}"),
+                  file=sys.stderr)
+            return 4
+        entries = {n: e for n, e in entries.items() if n not in unwanted}
     env_map = cfg.namespaces.get(ns, config.Namespace()).env_map
     child_env = dict(os.environ)
     for name, entry in entries.items():
@@ -686,6 +722,33 @@ def cmd_doctor(args):
     return 0 if failed == 0 else 2
 
 
+def cmd_export(args):
+    home = config.get_home()
+    if not config.config_path(home).exists():
+        print(style.fail("not initialized — run 'cubby init' first"),
+              file=sys.stderr)
+        return 4
+    dest = Path(args.file)
+    archive.export_bundle(home, dest)
+    print(style.ok(f"backup written to {dest}"))
+    return 0
+
+
+def cmd_restore(args):
+    home = config.get_home()
+    src = Path(args.file)
+    if not src.exists():
+        print(style.fail(f"restore: file not found: {args.file}"), file=sys.stderr)
+        return 2
+    if config.config_path(home).exists() and not args.force:
+        print(style.fail(f"restore: a store already exists at {home} "
+                         f"— pass --force to overwrite"), file=sys.stderr)
+        return 4
+    archive.restore_bundle(src, home)
+    print(style.ok(f"store restored to {home}"))
+    return 0
+
+
 def cmd_audit(args):
     home = config.get_home()
     if not config.config_path(home).exists():
@@ -711,7 +774,7 @@ def cmd_audit(args):
             print(style.dim("audit log is already empty"))
         return 0
 
-    lines = audit.read_log(home)
+    lines = audit.read_all(home) if args.show_all else audit.read_log(home)
     if not lines:
         print(style.dim("no audit entries"))
         return 0

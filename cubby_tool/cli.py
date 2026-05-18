@@ -4,12 +4,14 @@ import json
 import subprocess
 import sys
 
-from cubby_tool import commands, style
+from cubby_tool import __version__, commands, style
 from cubby_tool.help import command_names, render_command_help, render_help
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="cubby")
+    parser.add_argument("--version", action="version",
+                        version=f"cubby {__version__}")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_ns = sub.add_parser("ns", help="manage namespaces")
@@ -58,7 +60,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_get = sub.add_parser("get", help="show secret metadata")
     p_get.add_argument("name", help="secret name")
     p_get.add_argument("-n", "--namespace", default=None, help="namespace to use")
-    p_get.add_argument("--reveal", action="store_true", help="print plaintext (humans only)")
+    get_out = p_get.add_mutually_exclusive_group()
+    get_out.add_argument("--reveal", action="store_true",
+                         help="print plaintext (humans only)")
+    get_out.add_argument("--copy", action="store_true",
+                         help="copy the value to the system clipboard")
     p_get.set_defaults(func=commands.cmd_get)
 
     p_list = sub.add_parser("list", help="list secret names")
@@ -94,6 +100,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_run = sub.add_parser("run", help="run a command with namespace secrets in its env")
     p_run.add_argument("-n", "--namespace", default=None, help="namespace to use")
     p_run.add_argument("command", nargs=argparse.REMAINDER, help="the command to run, after --")
+    run_scope = p_run.add_mutually_exclusive_group()
+    run_scope.add_argument("--only", default=None, metavar="NAMES",
+                           help="inject only these secrets (comma-separated)")
+    run_scope.add_argument("--except", dest="exclude", default=None, metavar="NAMES",
+                           help="inject every secret except these (comma-separated)")
     p_run.set_defaults(func=commands.cmd_run)
 
     p_import = sub.add_parser("import", help="bulk import secrets from another source")
@@ -126,6 +137,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_audit.add_argument("--all", dest="show_all", action="store_true",
                          help="show the whole log, not just the last 20 lines")
     p_audit.set_defaults(func=commands.cmd_audit)
+
+    p_export = sub.add_parser("export", help="write a passphrase-encrypted backup")
+    p_export.add_argument("file", help="destination path for the backup bundle")
+    p_export.set_defaults(func=commands.cmd_export)
+
+    p_restore = sub.add_parser("restore", help="restore the store from a backup bundle")
+    p_restore.add_argument("file", help="path to the backup bundle")
+    p_restore.add_argument("--force", action="store_true",
+                           help="overwrite an existing store")
+    p_restore.set_defaults(func=commands.cmd_restore)
 
     return parser
 

@@ -5,6 +5,7 @@ from cubby_tool.agents.guidance import GUIDANCE
 def test_guidance_mentions_core_commands():
     assert "cubby run" in GUIDANCE
     assert "--reveal" in GUIDANCE
+    assert "--copy" in GUIDANCE
 
 
 def test_upsert_section_creates_file_with_markers(tmp_path):

@@ -10,7 +10,10 @@ ALLOW = [
     "Bash(cubby list:*)",
     "Bash(cubby ns:*)",
 ]
-DENY = ["Bash(cubby get:* --reveal*)"]
+DENY = [
+    "Bash(cubby get* --reveal*)",
+    "Bash(cubby get* --copy*)",
+]
 
 SKILL = f"""\
 ---

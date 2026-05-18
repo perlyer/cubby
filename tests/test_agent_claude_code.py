@@ -26,7 +26,8 @@ def test_install_writes_skill_command_and_permissions(tmp_path, monkeypatch):
     assert "name: cubby" in skill.read_text()
     assert command.exists()
     assert "Bash(cubby run:*)" in settings["permissions"]["allow"]
-    assert "Bash(cubby get:* --reveal*)" in settings["permissions"]["deny"]
+    assert "Bash(cubby get* --reveal*)" in settings["permissions"]["deny"]
+    assert "Bash(cubby get* --copy*)" in settings["permissions"]["deny"]
 
 
 def test_install_preserves_existing_settings(tmp_path, monkeypatch):
@@ -101,3 +102,13 @@ def test_status(tmp_path, monkeypatch):
     assert adapter.status() == "not installed"
     adapter.install()
     assert adapter.status() == "installed"
+
+
+def test_deny_list_covers_reveal_and_copy(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    _claude(tmp_path).mkdir()
+    adapter.install()
+    settings = json.loads((_claude(tmp_path) / "settings.json").read_text())
+    deny = settings["permissions"]["deny"]
+    assert "Bash(cubby get* --reveal*)" in deny
+    assert "Bash(cubby get* --copy*)" in deny

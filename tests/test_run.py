@@ -98,3 +98,49 @@ def test_run_does_not_write_audit_log_when_audit_disabled(home, identity, recipi
     result = _run(home, ["run", "-n", "test", "--", "true"])
     assert result.returncode == 0
     assert audit.read_log(home) == []
+
+
+def _setup_two(home, identity, recipient):
+    keyring.store_identity(home, identity, "file")
+    cfg = config.Config(default_namespace="test", key_mode="file",
+                        namespaces={"test": config.Namespace()})
+    config.save_config(home, cfg)
+    store.set_secret(home, "test", "alpha", "AAA", identity, recipient)
+    store.set_secret(home, "test", "beta", "BBB", identity, recipient)
+
+
+def test_run_only_injects_named_secret(home, identity, recipient):
+    _setup_two(home, identity, recipient)
+    result = _run(home, ["run", "-n", "test", "--only", "alpha",
+                         "--", "sh", "-c", "echo [$ALPHA][$BETA]"])
+    assert result.returncode == 0
+    assert result.stdout.strip() == "[AAA][]"
+
+
+def test_run_except_omits_named_secret(home, identity, recipient):
+    _setup_two(home, identity, recipient)
+    result = _run(home, ["run", "-n", "test", "--except", "alpha",
+                         "--", "sh", "-c", "echo [$ALPHA][$BETA]"])
+    assert result.returncode == 0
+    assert result.stdout.strip() == "[][BBB]"
+
+
+def test_run_only_unknown_secret_returns_4(home, identity, recipient):
+    _setup_two(home, identity, recipient)
+    result = _run(home, ["run", "-n", "test", "--only", "ghost", "--", "true"])
+    assert result.returncode == 4
+    assert "ghost" in result.stderr
+
+
+def test_run_except_unknown_secret_returns_4(home, identity, recipient):
+    _setup_two(home, identity, recipient)
+    result = _run(home, ["run", "-n", "test", "--except", "ghost", "--", "true"])
+    assert result.returncode == 4
+    assert "ghost" in result.stderr
+
+
+def test_run_only_and_except_together_is_an_error(home, identity, recipient):
+    _setup_two(home, identity, recipient)
+    result = _run(home, ["run", "-n", "test", "--only", "a",
+                         "--except", "b", "--", "true"])
+    assert result.returncode != 0

@@ -24,3 +24,10 @@ def test_static_command_matches_adapter_output():
 
 def test_settings_snippet_is_removed():
     assert not (REPO_ROOT / "docs" / "settings-snippet.json").exists()
+
+
+def test_version_matches_plugin_json():
+    from cubby_tool import __version__
+    data = json.loads(
+        (REPO_ROOT / "plugin" / ".claude-plugin" / "plugin.json").read_text())
+    assert data["version"] == __version__
