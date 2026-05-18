@@ -405,6 +405,10 @@ def cmd_cp(args):
     return _copy_or_move(args, move=False)
 
 
+def cmd_mv(args):
+    return _copy_or_move(args, move=True)
+
+
 def _env_var_name(secret_name: str) -> str:
     """Default environment-variable name for a secret: UPPER_SNAKE, no prefix."""
     return secret_name.upper().replace("-", "_")
