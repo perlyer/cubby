@@ -100,3 +100,41 @@ def test_fetch_1password_picks_password_field(monkeypatch):
 
     monkeypatch.setattr(sp, "run", fake_run)
     assert commands._fetch_1password("Personal") == {"GitHub": "pw"}
+
+
+def test_fetch_1password_concealed_fallback_and_skip(monkeypatch):
+    """CONCEALED-type field (no PASSWORD purpose) is used as the fallback value.
+    An item with only a STRING field (no CONCEALED, no PASSWORD) is skipped."""
+    import subprocess as sp
+
+    DETAIL = {
+        # Item with a CONCEALED field but no PURPOSE==PASSWORD field
+        "item-concealed": {"fields": [
+            {"type": "STRING", "value": "irrelevant"},
+            {"type": "CONCEALED", "value": "secret-token"},
+        ]},
+        # Item with only a STRING field — must be skipped entirely
+        "item-string-only": {"fields": [
+            {"type": "STRING", "value": "plain"},
+        ]},
+    }
+
+    def fake_run(cmd, **kwargs):
+        class R:
+            pass
+        r = R()
+        if cmd[:3] == ["op", "item", "list"]:
+            r.stdout = json.dumps([
+                {"id": "item-concealed", "title": "ApiToken"},
+                {"id": "item-string-only", "title": "Notes"},
+            ])
+        else:
+            # cmd is ["op", "item", "get", <id>, "--format", "json"]
+            item_id = cmd[3]
+            r.stdout = json.dumps(DETAIL[item_id])
+        return r
+
+    monkeypatch.setattr(sp, "run", fake_run)
+    result = commands._fetch_1password("Work")
+    assert result == {"ApiToken": "secret-token"}
+    assert "Notes" not in result
