@@ -32,6 +32,11 @@ def test_format_relative_future_and_past():
     assert commands._format_relative(soon) == "in 4 hours"
 
 
+def test_format_relative_hour_day_boundary():
+    near_day = (datetime.now(timezone.utc) + timedelta(hours=23, minutes=55)).isoformat()
+    assert commands._format_relative(near_day) == "in 1 day"
+
+
 def test_is_expired():
     past = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
     future = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()

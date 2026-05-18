@@ -301,6 +301,8 @@ def _format_relative(iso_timestamp: str) -> str:
         return "expires today" if future else "expired today"
     if secs < 86400:
         n, unit = round(secs / 3600), "hour"
+        if n >= 24:
+            n, unit = 1, "day"
     else:
         n, unit = round(secs / 86400), "day"
     plural = "" if n == 1 else "s"
