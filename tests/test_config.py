@@ -63,3 +63,16 @@ def test_resolve_raises_when_nothing_matches():
     empty = config.Config()
     with pytest.raises(LookupError):
         config.resolve_namespace(empty, cwd="/elsewhere")
+
+
+def test_config_audit_round_trips(tmp_path):
+    cfg = config.Config(default_namespace="x", audit=True)
+    config.save_config(tmp_path, cfg)
+    loaded = config.load_config(tmp_path)
+    assert loaded.audit is True
+
+
+def test_config_audit_defaults_false(tmp_path):
+    cfg = config.Config(default_namespace="x")
+    config.save_config(tmp_path, cfg)
+    assert config.load_config(tmp_path).audit is False
