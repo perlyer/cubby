@@ -213,6 +213,7 @@ store always uses file key-mode — if the bundle was created in keychain mode,
 
 `cubby completion bash` (or `zsh` / `fish`) prints a completion script for
 cubby's commands. For bash, add `eval "$(cubby completion bash)"` to `~/.bashrc`;
+for zsh, add `eval "$(cubby completion zsh)"` to `~/.zshrc`;
 for fish, `cubby completion fish > ~/.config/fish/completions/cubby.fish`.
 
 ## Contributing
