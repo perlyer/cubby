@@ -78,12 +78,15 @@ uncommitted changes. Your secret store in `~/.config/cubby/` is never touched.
 | `cubby list` | List secret names in the namespace |
 | `cubby rm <name>` | Delete a secret |
 | `cubby rename <old> <new>` | Rename a secret |
+| `cubby rotate <name>` | Replace a secret's value (tracks a rotation count) |
+| `cubby ttl [<name> [<dur>]]` | Show or change a secret's expiry |
 | `cubby run -- <cmd>` | Run a command with the namespace's secrets in its environment |
-| `cubby import` | Bulk import from a `.env` file or AWS Secrets Manager |
+| `cubby import <type> <src>` | Bulk import — `dotenv`, `aws`, `json`, `1password`, `ns` |
 | `cubby map` | Show or change the environment variable each secret is injected as |
 | `cubby ns add\|list\|rm\|use\|rename` | Manage namespaces |
 | `cubby agent add\|list\|rm\|refresh` | Manage AI-agent integrations |
 | `cubby doctor` | Check the install, key, config and namespaces for problems |
+| `cubby audit` | Show or manage the opt-in audit log |
 
 A typical session:
 
@@ -98,6 +101,8 @@ namespace: work
 env var:   DB_PASSWORD (default)
 length:    18
 updated:   2026-05-17T09:14:02+00:00
+expires:   never
+rotated:   never
 
 $ cubby run -- psql -h 127.0.0.1 -U appuser -d appdb
 psql (16.2)
@@ -123,6 +128,13 @@ injected as an environment variable — by default the `UPPER_SNAKE` of its name
 (`db-password` → `DB_PASSWORD`). To inject it under a different name, use
 `cubby set <name> --env VAR` or `cubby map <name> VAR` (e.g. `db-password` →
 `PGPASSWORD`); `cubby map` with no arguments lists the current mapping.
+
+A secret can carry an optional expiry. `cubby set <name> --ttl 30d` stores it
+with a 30-day TTL; `cubby ttl <name> 90d` changes the expiry later without
+re-entering the value, and `cubby ttl <name> none` clears it. An expired secret
+is never deleted — `cubby run` still injects it, with a warning, and
+`cubby doctor` flags it. `cubby rotate <name>` replaces a secret's value and, if
+it had a TTL, gives it a fresh one.
 
 ## Agent integration
 
@@ -155,6 +167,14 @@ see [Hardening for AI agents](SECURITY.md#hardening-for-ai-agents).
 guardrail, not a sandbox. It does not protect against a compromised machine or an
 agent that runs arbitrary code. Read [SECURITY.md](SECURITY.md) for the full threat
 model and how to report a vulnerability.
+
+## Audit log
+
+`cubby` can keep a local log of every time a secret value leaves the store — a
+`cubby run` or a `cubby get --reveal`. It is **off by default**; turn it on with
+`cubby audit --enable`. The log records a timestamp, the event, the namespace,
+and (for `run`) the command — never a secret value. `cubby audit` shows it,
+`cubby audit --clear` erases it. It lives at `~/.config/cubby/audit.log`.
 
 ## Contributing
 
