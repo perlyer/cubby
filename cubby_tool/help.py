@@ -49,6 +49,7 @@ GROUPS = [
         ("init", "first-run setup"),
         ("doctor", "check the install for problems"),
         ("audit", "show or manage the audit log"),
+        ("completion", "print a shell completion script"),
     ]),
 ]
 

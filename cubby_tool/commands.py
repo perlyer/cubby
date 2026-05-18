@@ -8,7 +8,8 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from cubby_tool import agents, archive, audit, config, keyring, store, style
+from cubby_tool import agents, archive, audit, completion, config, keyring, store, style
+from cubby_tool.help import command_names
 
 
 def _resolve(args):
@@ -831,4 +832,9 @@ def cmd_audit(args):
     shown = lines if args.show_all else lines[-20:]
     footer = None if cfg.audit else "audit logging is currently off"
     print(style.box([f" {ln}" for ln in shown], title="audit log", footer=footer))
+    return 0
+
+
+def cmd_completion(args):
+    print(completion.render(args.shell, command_names()))
     return 0

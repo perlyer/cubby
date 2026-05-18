@@ -7,6 +7,7 @@ def test_command_names_lists_every_command():
     assert set(cubby_help.command_names()) == {
         "set", "get", "list", "rm", "run", "import", "map", "rename", "rotate",
         "ttl", "cp", "mv", "ns", "agent", "init", "doctor", "audit", "export", "restore",
+        "completion",
     }
 
 
