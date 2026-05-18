@@ -744,8 +744,11 @@ def cmd_restore(args):
         print(style.fail(f"restore: a store already exists at {home} "
                          f"— pass --force to overwrite"), file=sys.stderr)
         return 4
-    archive.restore_bundle(src, home)
+    original_key_mode = archive.restore_bundle(src, home)
     print(style.ok(f"store restored to {home}"))
+    if original_key_mode == "keychain":
+        print(style.dim("note: backup used keychain key-mode — "
+                        "restored as file key-mode"))
     return 0
 
 

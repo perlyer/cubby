@@ -121,3 +121,47 @@ def test_restore_bundle_forces_file_key_mode(home, monkeypatch, tmp_path):
     monkeypatch.setattr(archive.subprocess, "run", fake_run)
     archive.restore_bundle(tmp_path / "bundle.age", home)
     assert config.load_config(home).key_mode == "file"
+
+
+def test_restore_bundle_clears_stale_namespace_files(home, monkeypatch, tmp_path):
+    (home / "secrets").mkdir(parents=True)
+    (home / "secrets" / "stale.age").write_bytes(b"OLD")
+    members = {
+        "identity": b"AGE-SECRET-KEY-FAKE",
+        "config.json": b'{"default_namespace": "test", "key_mode": "file", '
+                       b'"audit": false, "namespaces": {}}',
+        "secrets/test.age": b"\x01\x02\x03",
+    }
+    tar_bytes = archive.build_tar(members)
+
+    def fake_run(cmd, **kw):
+        class R:
+            stdout = tar_bytes
+            returncode = 0
+        return R()
+
+    monkeypatch.setattr(archive.subprocess, "run", fake_run)
+    archive.restore_bundle(tmp_path / "bundle.age", home)
+    assert not (home / "secrets" / "stale.age").exists()
+    assert (home / "secrets" / "test.age").read_bytes() == b"\x01\x02\x03"
+
+
+def test_restore_bundle_returns_original_key_mode(home, monkeypatch, tmp_path):
+    members = {
+        "identity": b"AGE-SECRET-KEY-FAKE",
+        "config.json": b'{"default_namespace": "test", "key_mode": "keychain", '
+                       b'"audit": false, "namespaces": {}}',
+    }
+    tar_bytes = archive.build_tar(members)
+
+    def fake_run(cmd, **kw):
+        class R:
+            stdout = tar_bytes
+            returncode = 0
+        return R()
+
+    monkeypatch.setattr(archive.subprocess, "run", fake_run)
+    original = archive.restore_bundle(tmp_path / "bundle.age", home)
+    assert original == "keychain"
+    from cubby_tool import config
+    assert config.load_config(home).key_mode == "file"

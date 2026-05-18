@@ -48,13 +48,18 @@ def export_bundle(home: Path, dest: Path) -> None:
                    input=tar_bytes, check=True)
 
 
-def restore_bundle(src: Path, home: Path) -> None:
+def restore_bundle(src: Path, home: Path) -> str:
     """Decrypt a backup bundle and unpack it into `home`. `age` prompts for
-    the passphrase. The restored store always uses file key-mode."""
+    the passphrase. The restored store always uses file key-mode; returns the
+    bundle's original key-mode (so the caller can report a keychain backup)."""
     result = subprocess.run(["age", "--decrypt", str(src)],
                             capture_output=True, check=True)
     members = extract_tar(result.stdout)
-    (home / "secrets").mkdir(parents=True, exist_ok=True)
+    secrets_dir = home / "secrets"
+    if secrets_dir.is_dir():
+        for stale in secrets_dir.glob("*.age"):
+            stale.unlink()
+    secrets_dir.mkdir(parents=True, exist_ok=True)
     for arcname, data in members.items():
         target = home / arcname
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -63,8 +68,10 @@ def restore_bundle(src: Path, home: Path) -> None:
     if identity_file.exists():
         identity_file.chmod(0o600)
     cfg = config.load_config(home)
+    original_key_mode = cfg.key_mode
     cfg.key_mode = "file"
     config.save_config(home, cfg)
+    return original_key_mode
 
 
 def extract_tar(data: bytes) -> dict:
