@@ -84,6 +84,7 @@ def test_copy_secret_copies_entry(home, identity, recipient):
     assert "k" in src                       # source untouched
     assert dst["k"]["value"] == "v"
     assert dst["k"]["ttl"] == "30d"          # metadata carried
+    assert dst["k"]["expires"] == "2099-01-01T00:00:00+00:00"
 
 
 def test_copy_secret_missing_source(home, identity, recipient):
@@ -97,3 +98,12 @@ def test_copy_secret_exists_in_destination(home, identity, recipient):
     assert store.copy_secret(home, "src", "dst", "k", identity,
                              recipient) == "exists"
     assert store.read_entries(home, "dst", identity)["k"]["value"] == "v2"
+
+
+def test_copy_secret_preserves_other_destination_secrets(home, identity, recipient):
+    store.set_secret(home, "src", "k", "v", identity, recipient)
+    store.set_secret(home, "dst", "existing", "keep-me", identity, recipient)
+    assert store.copy_secret(home, "src", "dst", "k", identity, recipient) == "ok"
+    dst = store.read_entries(home, "dst", identity)
+    assert dst["k"]["value"] == "v"
+    assert dst["existing"]["value"] == "keep-me"   # the prior secret survives
