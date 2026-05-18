@@ -31,3 +31,19 @@ def test_doctor_warns_on_a_dangling_env_map_entry(inited_home, capsys):
     # a dangling entry is a warning, not a failure — still exit 0
     assert cli.main(["doctor"]) == 0
     assert "ghost" in capsys.readouterr().out
+
+
+def test_doctor_fails_when_config_is_missing(home, monkeypatch, capsys):
+    monkeypatch.setenv("CUBBY_HOME", str(home))
+    assert cli.main(["doctor"]) == 2
+    out = capsys.readouterr().out
+    assert "no config" in out
+
+
+def test_doctor_fails_when_identity_is_gone(inited_home, capsys):
+    from cubby_tool import keyring
+    # delete the file-mode age identity so it can no longer be loaded
+    keyring.identity_file(inited_home).unlink()
+    assert cli.main(["doctor"]) == 2
+    out = capsys.readouterr().out
+    assert "identity" in out
