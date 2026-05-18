@@ -35,10 +35,7 @@ def log_event(home: Path, enabled: bool, event: str, namespace: str,
     path = log_path(home)
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists() and path.stat().st_size + len(line.encode()) > MAX_LOG_BYTES:
-        rotated = _rotated_path(home)
-        with rotated.open("a", encoding="utf-8") as rf:
-            rf.write(path.read_text(encoding="utf-8"))
-        path.unlink()
+        path.replace(_rotated_path(home))
     with path.open("a", encoding="utf-8") as fh:
         fh.write(line)
     path.chmod(0o600)

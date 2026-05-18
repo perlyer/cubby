@@ -53,12 +53,16 @@ def test_log_event_rotates_when_oversized(home, monkeypatch):
 
 def test_read_all_includes_rotated_history(home, monkeypatch):
     monkeypatch.setattr(audit, "MAX_LOG_BYTES", 200)
-    for i in range(40):
-        audit.log_event(home, True, "run", "ns", f"command-number-{i}")
+    i = 0
+    while not (home / "audit.log.1").exists():
+        audit.log_event(home, True, "run", "ns", f"event-{i}")
+        i += 1
+    audit.log_event(home, True, "run", "ns", "event-after-rotation")
     all_lines = audit.read_all(home)
     current = audit.read_log(home)
-    assert len(all_lines) > len(current)
-    assert any("command-number-0" in ln for ln in all_lines)
+    assert len(all_lines) > len(current)               # .1 contributes history
+    assert any("event-after-rotation" in ln for ln in current)
+    assert any("event-after-rotation" in ln for ln in all_lines)
 
 
 def test_clear_log_removes_rotated_file(home, monkeypatch):

@@ -54,7 +54,13 @@ def test_reveal_not_logged_when_audit_off(inited_home, identity, recipient, caps
 
 def test_audit_all_shows_rotated_history(inited_home, monkeypatch, capsys):
     monkeypatch.setattr(audit, "MAX_LOG_BYTES", 200)
-    for i in range(40):
-        audit.log_event(inited_home, True, "run", "test", f"command-number-{i}")
+    i = 0
+    while not (inited_home / "audit.log.1").exists():
+        audit.log_event(inited_home, True, "run", "test", f"event-{i}")
+        i += 1
+    audit.log_event(inited_home, True, "run", "test", "latest-event")
     assert cli.main(["audit", "--all"]) == 0
-    assert "command-number-0" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "latest-event" in out
+    # --all reaches into audit.log.1 — at least one rotated event is shown
+    assert any(f"event-{j}" in out for j in range(i))
