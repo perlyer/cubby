@@ -4,12 +4,14 @@ import json
 import subprocess
 import sys
 
-from cubby_tool import commands, style
+from cubby_tool import __version__, commands, style
 from cubby_tool.help import command_names, render_command_help, render_help
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="cubby")
+    parser.add_argument("--version", action="version",
+                        version=f"cubby {__version__}")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_ns = sub.add_parser("ns", help="manage namespaces")

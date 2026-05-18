@@ -122,3 +122,10 @@ def test_ns_add_help_shows_argument_descriptions(capsys):
 def test_run_help_shows_command_description(capsys):
     assert cli.main(["run", "-h"]) == 0
     assert "the command to run" in capsys.readouterr().out
+
+
+def test_version_flag_prints_version(capsys):
+    with pytest.raises(SystemExit) as exc:
+        cli.main(["--version"])
+    assert exc.value.code == 0
+    assert "cubby" in capsys.readouterr().out
