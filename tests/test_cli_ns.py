@@ -1,3 +1,5 @@
+import getpass
+
 from cubby_tool import cli, config
 
 
@@ -86,3 +88,27 @@ def test_ns_rename_to_existing_returns_4(home, monkeypatch, capsys):
     cli.main(["ns", "add", "one"])
     cli.main(["ns", "add", "two"])
     assert cli.main(["ns", "rename", "one", "two"]) == 4
+
+
+def test_ns_rename_moves_the_encrypted_file(inited_home, monkeypatch, capsys):
+    home = inited_home
+    monkeypatch.setattr(getpass, "getpass", lambda *a, **k: "s3cret")
+    cli.main(["ns", "add", "src-ns"])
+    cli.main(["set", "-n", "src-ns", "thekey"])
+    assert (home / "secrets" / "src-ns.age").exists()
+    assert cli.main(["ns", "rename", "src-ns", "dst-ns"]) == 0
+    # the encrypted file moved with the namespace
+    assert not (home / "secrets" / "src-ns.age").exists()
+    assert (home / "secrets" / "dst-ns.age").exists()
+    # and the secret is still readable under the new namespace
+    capsys.readouterr()
+    assert cli.main(["list", "-n", "dst-ns"]) == 0
+    assert "thekey" in capsys.readouterr().out
+
+
+def test_ns_rename_of_non_default_leaves_default_alone(home, monkeypatch, capsys):
+    monkeypatch.setenv("CUBBY_HOME", str(home))
+    cli.main(["ns", "add", "first"])          # becomes the default
+    cli.main(["ns", "add", "second"])         # not the default
+    assert cli.main(["ns", "rename", "second", "second-renamed"]) == 0
+    assert config.load_config(home).default_namespace == "first"
