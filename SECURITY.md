@@ -17,6 +17,10 @@ precise about what that does and does not buy you.
   hidden prompt (or stdin), never from `argv`.
 - **Wrong-namespace leakage.** Namespace resolution matches working-directory prefixes
   on path boundaries, so `/p/project` is never treated as part of `/p/proj`.
+- **A record of secret access.** With the opt-in audit log enabled
+  (`cubby audit --enable`), every `cubby run` and `cubby get --reveal` appends a
+  timestamped line to `~/.config/cubby/audit.log`. The log records the event,
+  namespace, and command — never a secret value.
 
 ### What cubby does NOT protect against
 

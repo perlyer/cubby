@@ -42,6 +42,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_set.add_argument("--stdin", action="store_true", help="read value from stdin")
     p_set.add_argument("--env", dest="env", default=None, metavar="VAR",
                        help="environment variable to inject this secret as")
+    p_set.add_argument("--ttl", dest="ttl", default=None, metavar="DURATION",
+                       help="expire the secret after a duration, e.g. 30d (h/d/w)")
     p_set.set_defaults(func=commands.cmd_set)
 
     p_map = sub.add_parser("map", help="show or change how secrets map to env vars")
@@ -74,18 +76,34 @@ def build_parser() -> argparse.ArgumentParser:
     p_rename.add_argument("-n", "--namespace", default=None, help="namespace to use")
     p_rename.set_defaults(func=commands.cmd_rename)
 
+    p_rotate = sub.add_parser("rotate", help="replace a secret's value")
+    p_rotate.add_argument("name", help="secret name")
+    p_rotate.add_argument("-n", "--namespace", default=None, help="namespace to use")
+    p_rotate.add_argument("--stdin", action="store_true", help="read value from stdin")
+    p_rotate.add_argument("--ttl", dest="ttl", default=None, metavar="DURATION",
+                          help="set/replace the expiry (h/d/w), or 'none' to clear")
+    p_rotate.set_defaults(func=commands.cmd_rotate)
+
+    p_ttl = sub.add_parser("ttl", help="show or change secret expiry")
+    p_ttl.add_argument("name", nargs="?", default=None, help="secret name")
+    p_ttl.add_argument("duration", nargs="?", default=None,
+                       help="duration (h/d/w), or 'none' to clear the expiry")
+    p_ttl.add_argument("-n", "--namespace", default=None, help="namespace to use")
+    p_ttl.set_defaults(func=commands.cmd_ttl)
+
     p_run = sub.add_parser("run", help="run a command with namespace secrets in its env")
     p_run.add_argument("-n", "--namespace", default=None, help="namespace to use")
     p_run.add_argument("command", nargs=argparse.REMAINDER, help="the command to run, after --")
     p_run.set_defaults(func=commands.cmd_run)
 
-    p_import = sub.add_parser("import", help="import secrets from .env or AWS Secrets Manager")
+    p_import = sub.add_parser("import", help="bulk import secrets from another source")
+    p_import.add_argument("source_type", metavar="type",
+                          choices=["dotenv", "aws", "json", "1password", "ns"],
+                          help="source type: dotenv, aws, json, 1password, ns")
+    p_import.add_argument("source",
+                          help="a file path, AWS secret id, 1Password vault, or namespace")
     p_import.add_argument("-n", "--namespace", default=None, help="namespace to use")
-    p_import.add_argument("--from-env", dest="from_env", default=None, metavar="PATH",
-                          help="path to a .env file to import")
-    p_import.add_argument("--from-aws", dest="from_aws", default=None, metavar="SECRET_ID",
-                          help="AWS Secrets Manager secret id to import")
-    p_import.add_argument("--region", default=None, help="AWS region (for --from-aws)")
+    p_import.add_argument("--region", default=None, help="AWS region (for type 'aws')")
     p_import.set_defaults(func=commands.cmd_import)
 
     p_agent = sub.add_parser("agent", help="manage agent integrations")
@@ -100,6 +118,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_doctor = sub.add_parser("doctor", help="check the cubby installation for problems")
     p_doctor.set_defaults(func=commands.cmd_doctor)
+
+    p_audit = sub.add_parser("audit", help="show or manage the audit log")
+    p_audit.add_argument("--enable", action="store_true", help="turn on audit logging")
+    p_audit.add_argument("--disable", action="store_true", help="turn off audit logging")
+    p_audit.add_argument("--clear", action="store_true", help="erase the audit log")
+    p_audit.add_argument("--all", dest="show_all", action="store_true",
+                         help="show the whole log, not just the last 20 lines")
+    p_audit.set_defaults(func=commands.cmd_audit)
 
     return parser
 

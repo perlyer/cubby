@@ -4,6 +4,28 @@ All notable changes to `cubby` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] — 2026-05-18
+
+### Added
+
+- `cubby rotate <name>` — replace a secret's value; tracks a rotation count
+  shown by `cubby get`.
+- `cubby set --ttl DURATION` and `cubby ttl` — give a secret an optional expiry
+  (`h`/`d`/`w` durations). `cubby ttl` shows or changes the expiry without
+  touching the value; `cubby run` warns about an expired secret (still injects
+  it); `cubby doctor` flags expired secrets.
+- `cubby audit` — an opt-in local audit log of `run` and `get --reveal` events
+  (never values). Enable with `cubby audit --enable`.
+- `cubby import` learns three sources: `json` (a flat JSON file), `1password`
+  (a vault, via the `op` CLI), and `ns` (copy from another namespace).
+- `cubby get` now shows a secret's `expires` and `rotated` lines.
+
+### Changed
+
+- `cubby import` moved from the `--from-env` / `--from-aws` flags to a
+  positional form: `cubby import <type> <source>`, where `<type>` is one of
+  `dotenv`, `aws`, `json`, `1password`, `ns`.
+
 ## [0.4.0] — 2026-05-18
 
 ### Added
@@ -86,3 +108,4 @@ First release.
 [0.3.0]: https://github.com/perlyer/cubby/releases/tag/v0.3.0
 [0.3.1]: https://github.com/perlyer/cubby/releases/tag/v0.3.1
 [0.4.0]: https://github.com/perlyer/cubby/releases/tag/v0.4.0
+[0.5.0]: https://github.com/perlyer/cubby/releases/tag/v0.5.0

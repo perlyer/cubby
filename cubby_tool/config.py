@@ -21,6 +21,7 @@ class Config:
     default_namespace: str = ""
     key_mode: str = "file"
     namespaces: dict = field(default_factory=dict)
+    audit: bool = False
 
 
 def config_path(home: Path) -> Path:
@@ -40,6 +41,7 @@ def load_config(home: Path) -> Config:
         default_namespace=raw.get("default_namespace", ""),
         key_mode=raw.get("key_mode", "file"),
         namespaces=namespaces,
+        audit=raw.get("audit", False),
     )
 
 
@@ -48,6 +50,7 @@ def save_config(home: Path, cfg: Config) -> None:
     data = {
         "default_namespace": cfg.default_namespace,
         "key_mode": cfg.key_mode,
+        "audit": cfg.audit,
         "namespaces": {
             name: {"cwd_prefix": ns.cwd_prefix, "env_map": ns.env_map}
             for name, ns in cfg.namespaces.items()

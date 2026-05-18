@@ -33,10 +33,31 @@ def read_values(home: Path, namespace: str, identity_text: str) -> dict:
     return {n: e["value"] for n, e in read_entries(home, namespace, identity_text).items()}
 
 
-def set_secret(home, namespace, name, value, identity_text, recipient) -> None:
+def set_secret(home, namespace, name, value, identity_text, recipient, *, meta=None) -> None:
     entries = read_entries(home, namespace, identity_text)
-    entries[name] = {"value": value, "updated": _now()}
+    entry = {"value": value, "updated": _now()}
+    if meta:
+        entry.update(meta)
+    entries[name] = entry
     write_entries(home, namespace, entries, recipient)
+
+
+def rotate_secret(home, namespace, name, value, identity_text, recipient, *, meta=None) -> str:
+    """Rotate an existing secret's value. Returns 'ok' or 'missing'. Increments
+    the 'rotated' counter and merges the caller-resolved `meta` (ttl/expires)."""
+    entries = read_entries(home, namespace, identity_text)
+    if name not in entries:
+        return "missing"
+    entry = {
+        "value": value,
+        "updated": _now(),
+        "rotated": entries[name].get("rotated", 0) + 1,
+    }
+    if meta:
+        entry.update(meta)
+    entries[name] = entry
+    write_entries(home, namespace, entries, recipient)
+    return "ok"
 
 
 def delete_secret(home, namespace, name, identity_text, recipient) -> bool:

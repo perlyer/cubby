@@ -27,9 +27,11 @@ GROUPS = [
         ("list", "list secret names"),
         ("rm", "delete a secret"),
         ("run", "run a command with secrets in env"),
-        ("import", "bulk import from .env / AWS"),
+        ("import", "bulk import secrets from another source"),
         ("map", "show or change secret env vars"),
         ("rename", "rename a secret"),
+        ("rotate", "replace a secret's value"),
+        ("ttl", "show or change secret expiry"),
     ]),
     ("namespaces", [
         ("ns", "manage namespaces"),
@@ -40,6 +42,7 @@ GROUPS = [
     ("setup", [
         ("init", "first-run setup"),
         ("doctor", "check the install for problems"),
+        ("audit", "show or manage the audit log"),
     ]),
 ]
 
