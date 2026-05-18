@@ -435,11 +435,14 @@ def cmd_run(args):
               file=sys.stderr)
         return 2
     identity = keyring.load_identity(home, cfg.key_mode)
-    values = store.read_values(home, ns, identity)
+    entries = store.read_entries(home, ns, identity)
     env_map = cfg.namespaces.get(ns, config.Namespace()).env_map
     child_env = dict(os.environ)
-    for name, value in values.items():
-        child_env[_resolve_env_var(env_map, name)] = value
+    for name, entry in entries.items():
+        if _is_expired(entry):
+            print(f"cubby: warning: secret '{name}' in namespace '{ns}' "
+                  f"{_format_relative(entry['expires'])}", file=sys.stderr)
+        child_env[_resolve_env_var(env_map, name)] = entry["value"]
     try:
         os.execvpe(command[0], command, child_env)
     except FileNotFoundError:

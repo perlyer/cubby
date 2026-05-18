@@ -61,3 +61,23 @@ def test_run_unknown_command_returns_2(home, identity, recipient):
     assert result.returncode == 2
     assert "not found" in result.stderr
     assert "Traceback" not in result.stderr
+
+
+def test_run_warns_about_expired_secret(home, identity, recipient):
+    keyring.store_identity(home, identity, "file")
+    cfg = config.Config(default_namespace="test", key_mode="file",
+                        namespaces={"test": config.Namespace()})
+    config.save_config(home, cfg)
+    store.set_secret(home, "test", "db-pass", "s3cret", identity, recipient,
+                     meta={"ttl": "1d", "expires": "2000-01-01T00:00:00+00:00"})
+    result = _run(home, ["run", "-n", "test", "--", "sh", "-c", "echo $DB_PASS"])
+    assert result.returncode == 0
+    assert result.stdout.strip() == "s3cret"          # still injected
+    assert "expired" in result.stderr
+    assert "db-pass" in result.stderr
+
+
+def test_run_no_warning_for_unexpired_secret(home, identity, recipient):
+    _setup(home, identity, recipient)
+    result = _run(home, ["run", "-n", "test", "--", "true"])
+    assert "expired" not in result.stderr
