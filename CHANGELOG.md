@@ -4,6 +4,22 @@ All notable changes to `cubby` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] — 2026-05-18
+
+### Added
+- `cubby cp <secret> <namespace>` / `cubby mv <secret> <namespace>` — copy or
+  move a single secret between namespaces (its env-var mapping moves with it).
+- `cubby completion {bash,zsh,fish}` — print a shell completion script for
+  cubby's command names.
+- cubby is now pip-installable — `pipx install cubby` (a `pyproject.toml` with a
+  `cubby` console entry point). The `git clone` + `install.sh` path is unchanged.
+
+### Fixed
+- `cubby restore --force` no longer leaves stale namespace files from the
+  overwritten store — the restored store contains exactly the bundle's contents.
+- `cubby restore` now reports when a keychain-mode backup is restored as a
+  file-mode store.
+
 ## [0.6.0] — 2026-05-18
 
 ### Added
@@ -117,6 +133,7 @@ First release.
 - Claude Code plugin marketplace manifest for native `/plugin` installation.
 - Two key-storage modes: an `0600` identity file, or the macOS login Keychain.
 
+[0.7.0]: https://github.com/perlyer/cubby/releases/tag/v0.7.0
 [0.1.0]: https://github.com/perlyer/cubby/releases/tag/v0.1.0
 [0.2.0]: https://github.com/perlyer/cubby/releases/tag/v0.2.0
 [0.3.0]: https://github.com/perlyer/cubby/releases/tag/v0.3.0
