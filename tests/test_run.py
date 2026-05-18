@@ -132,6 +132,13 @@ def test_run_only_unknown_secret_returns_4(home, identity, recipient):
     assert "ghost" in result.stderr
 
 
+def test_run_except_unknown_secret_returns_4(home, identity, recipient):
+    _setup_two(home, identity, recipient)
+    result = _run(home, ["run", "-n", "test", "--except", "ghost", "--", "true"])
+    assert result.returncode == 4
+    assert "ghost" in result.stderr
+
+
 def test_run_only_and_except_together_is_an_error(home, identity, recipient):
     _setup_two(home, identity, recipient)
     result = _run(home, ["run", "-n", "test", "--only", "a",
