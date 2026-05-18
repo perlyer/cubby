@@ -73,3 +73,27 @@ def test_rotate_secret_applies_meta(home, identity, recipient):
     entry = store.read_entries(home, "ns", identity)["k"]
     assert entry["ttl"] == "7d"
     assert entry["expires"] == "2099-01-01T00:00:00+00:00"
+
+
+def test_copy_secret_copies_entry(home, identity, recipient):
+    store.set_secret(home, "src", "k", "v", identity, recipient,
+                     meta={"ttl": "30d", "expires": "2099-01-01T00:00:00+00:00"})
+    assert store.copy_secret(home, "src", "dst", "k", identity, recipient) == "ok"
+    src = store.read_entries(home, "src", identity)
+    dst = store.read_entries(home, "dst", identity)
+    assert "k" in src                       # source untouched
+    assert dst["k"]["value"] == "v"
+    assert dst["k"]["ttl"] == "30d"          # metadata carried
+
+
+def test_copy_secret_missing_source(home, identity, recipient):
+    assert store.copy_secret(home, "src", "dst", "absent", identity,
+                             recipient) == "missing"
+
+
+def test_copy_secret_exists_in_destination(home, identity, recipient):
+    store.set_secret(home, "src", "k", "v1", identity, recipient)
+    store.set_secret(home, "dst", "k", "v2", identity, recipient)
+    assert store.copy_secret(home, "src", "dst", "k", identity,
+                             recipient) == "exists"
+    assert store.read_entries(home, "dst", identity)["k"]["value"] == "v2"

@@ -85,6 +85,22 @@ def rename_secret(home, namespace, old, new, identity_text, recipient) -> str:
     return "ok"
 
 
+def copy_secret(home, src_namespace, dest_namespace, name,
+                identity_text, recipient) -> str:
+    """Copy a secret entry from one namespace to another. Returns 'ok',
+    'missing' (absent in the source), or 'exists' (already in the destination).
+    The whole entry — value and metadata — is copied."""
+    src_entries = read_entries(home, src_namespace, identity_text)
+    if name not in src_entries:
+        return "missing"
+    dest_entries = read_entries(home, dest_namespace, identity_text)
+    if name in dest_entries:
+        return "exists"
+    dest_entries[name] = src_entries[name]
+    write_entries(home, dest_namespace, dest_entries, recipient)
+    return "ok"
+
+
 def rename_namespace_file(home, old, new) -> None:
     """Rename a namespace's encrypted file, if it exists."""
     src = secrets_path(home, old)
