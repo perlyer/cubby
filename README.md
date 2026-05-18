@@ -58,6 +58,16 @@ integration into any AI coding agents it finds. Non-interactive:
 automatically at login; the default `--key-mode file` keeps it in
 `~/.config/cubby/identity` (mode `0600`).
 
+### Install from PyPI
+
+```bash
+pipx install cubby
+```
+
+This puts the `cubby` command on your `PATH`. It does not set up the AI-agent
+integration — run `cubby agent add <agent>` for that, or use the `git clone` +
+`./install.sh` flow above, which does it for you.
+
 ## Updating
 
 ```bash
@@ -78,6 +88,8 @@ uncommitted changes. Your secret store in `~/.config/cubby/` is never touched.
 | `cubby list` | List secret names in the namespace |
 | `cubby rm <name>` | Delete a secret |
 | `cubby rename <old> <new>` | Rename a secret |
+| `cubby cp <name> <ns>` | Copy a secret to another namespace |
+| `cubby mv <name> <ns>` | Move a secret to another namespace |
 | `cubby rotate <name>` | Replace a secret's value (tracks a rotation count) |
 | `cubby ttl [<name> [<dur>]]` | Show or change a secret's expiry |
 | `cubby run -- <cmd>` | Run a command with the namespace's secrets in its environment (`--only`/`--except` to scope) |
@@ -86,6 +98,7 @@ uncommitted changes. Your secret store in `~/.config/cubby/` is never touched.
 | `cubby ns add\|list\|rm\|use\|rename` | Manage namespaces |
 | `cubby agent add\|list\|rm\|refresh` | Manage AI-agent integrations |
 | `cubby doctor` | Check the install, key, config and namespaces for problems |
+| `cubby completion <shell>` | Print a shell completion script (bash/zsh/fish) |
 | `cubby audit` | Show or manage the opt-in audit log |
 | `cubby export <file>` | Write a passphrase-encrypted backup of the whole store |
 | `cubby restore <file>` | Restore the store from a backup bundle |
@@ -192,7 +205,16 @@ passphrase. Because the bundle is passphrase-encrypted it is safe to store
 off-machine.
 
 `cubby restore backup.age` rebuilds the store from a bundle on a fresh machine.
-It refuses to overwrite an existing store unless you pass `--force`.
+It refuses to overwrite an existing store unless you pass `--force`. The restored
+store always uses file key-mode — if the bundle was created in keychain mode,
+`cubby restore` reports this so you can re-migrate to the Keychain afterwards.
+
+## Shell completion
+
+`cubby completion bash` (or `zsh` / `fish`) prints a completion script for
+cubby's commands. For bash, add `eval "$(cubby completion bash)"` to `~/.bashrc`;
+for zsh, add `eval "$(cubby completion zsh)"` to `~/.zshrc`;
+for fish, `cubby completion fish > ~/.config/fish/completions/cubby.fish`.
 
 ## Contributing
 

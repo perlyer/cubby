@@ -32,6 +32,8 @@ GROUPS = [
         ("rename", "rename a secret"),
         ("rotate", "replace a secret's value"),
         ("ttl", "show or change secret expiry"),
+        ("cp", "copy a secret to another namespace"),
+        ("mv", "move a secret to another namespace"),
     ]),
     ("namespaces", [
         ("ns", "manage namespaces"),
@@ -47,6 +49,7 @@ GROUPS = [
         ("init", "first-run setup"),
         ("doctor", "check the install for problems"),
         ("audit", "show or manage the audit log"),
+        ("completion", "print a shell completion script"),
     ]),
 ]
 

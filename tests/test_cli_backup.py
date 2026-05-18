@@ -37,3 +37,20 @@ def test_restore_force_overwrites(inited_home, monkeypatch, capsys, tmp_path):
 def test_restore_missing_file_returns_2(inited_home, capsys, tmp_path):
     assert cli.main(["restore", str(tmp_path / "nope.age")]) == 2
     assert "not found" in capsys.readouterr().err
+
+
+def test_restore_reports_keychain_backup(inited_home, monkeypatch, capsys, tmp_path):
+    bundle = tmp_path / "b.age"
+    bundle.write_bytes(b"x")
+    monkeypatch.setattr(archive, "restore_bundle", lambda src, home: "keychain")
+    assert cli.main(["restore", str(bundle), "--force"]) == 0
+    out = capsys.readouterr().out
+    assert "keychain" in out and "file key-mode" in out
+
+
+def test_restore_no_note_for_file_backup(inited_home, monkeypatch, capsys, tmp_path):
+    bundle = tmp_path / "b.age"
+    bundle.write_bytes(b"x")
+    monkeypatch.setattr(archive, "restore_bundle", lambda src, home: "file")
+    assert cli.main(["restore", str(bundle), "--force"]) == 0
+    assert "keychain" not in capsys.readouterr().out

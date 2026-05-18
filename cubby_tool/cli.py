@@ -82,6 +82,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_rename.add_argument("-n", "--namespace", default=None, help="namespace to use")
     p_rename.set_defaults(func=commands.cmd_rename)
 
+    p_cp = sub.add_parser("cp", help="copy a secret to another namespace")
+    p_cp.add_argument("name", help="secret name")
+    p_cp.add_argument("dest", metavar="namespace", help="destination namespace")
+    p_cp.add_argument("-n", "--namespace", default=None,
+                      help="source namespace (default: the active one)")
+    p_cp.set_defaults(func=commands.cmd_cp)
+
+    p_mv = sub.add_parser("mv", help="move a secret to another namespace")
+    p_mv.add_argument("name", help="secret name")
+    p_mv.add_argument("dest", metavar="namespace", help="destination namespace")
+    p_mv.add_argument("-n", "--namespace", default=None,
+                      help="source namespace (default: the active one)")
+    p_mv.set_defaults(func=commands.cmd_mv)
+
     p_rotate = sub.add_parser("rotate", help="replace a secret's value")
     p_rotate.add_argument("name", help="secret name")
     p_rotate.add_argument("-n", "--namespace", default=None, help="namespace to use")
@@ -137,6 +151,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_audit.add_argument("--all", dest="show_all", action="store_true",
                          help="show the whole log, not just the last 20 lines")
     p_audit.set_defaults(func=commands.cmd_audit)
+
+    p_completion = sub.add_parser("completion",
+                                  help="print a shell completion script")
+    p_completion.add_argument("shell", choices=["bash", "zsh", "fish"],
+                              help="the shell to generate completion for")
+    p_completion.set_defaults(func=commands.cmd_completion)
 
     p_export = sub.add_parser("export", help="write a passphrase-encrypted backup")
     p_export.add_argument("file", help="destination path for the backup bundle")
