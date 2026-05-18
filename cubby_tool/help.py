@@ -31,6 +31,7 @@ GROUPS = [
         ("map", "show or change secret env vars"),
         ("rename", "rename a secret"),
         ("rotate", "replace a secret's value"),
+        ("ttl", "show or change secret expiry"),
     ]),
     ("namespaces", [
         ("ns", "manage namespaces"),

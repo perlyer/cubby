@@ -170,6 +170,60 @@ def cmd_rotate(args):
     return 0
 
 
+def cmd_ttl(args):
+    home, cfg, ns, _ = _resolve(args)
+    identity = keyring.load_identity(home, cfg.key_mode)
+    recipient = keyring.public_key(identity)
+    entries = store.read_entries(home, ns, identity)
+
+    if args.name is None:
+        if not entries:
+            print(style.dim(f"no secrets in namespace '{ns}'"))
+            return 0
+        width = max(len(n) for n in entries)
+        lines = []
+        for name in sorted(entries):
+            exp = entries[name].get("expires")
+            if not exp:
+                detail = style.dim("no expiry")
+            else:
+                detail = f"{exp}  {style.dim('(' + _format_relative(exp) + ')')}"
+            lines.append(f" {name.ljust(width)}  {detail}")
+        print(style.box(lines, title=f"ttl · {ns}"))
+        return 0
+
+    if args.name not in entries:
+        print(style.fail(f"secret '{args.name}' not found in namespace '{ns}'"),
+              file=sys.stderr)
+        return 4
+    entry = entries[args.name]
+
+    if args.duration is None:
+        exp = entry.get("expires")
+        if not exp:
+            print(f"{args.name}: no expiry")
+        else:
+            print(f"{args.name}: expires {exp} ({_format_relative(exp)})")
+        return 0
+
+    if args.duration == "none":
+        if "ttl" not in entry and "expires" not in entry:
+            print(style.dim(f"'{args.name}' has no expiry"))
+            return 0
+        entry.pop("ttl", None)
+        entry.pop("expires", None)
+        store.write_entries(home, ns, entries, recipient)
+        print(style.ok(f"expiry cleared for '{args.name}'"))
+        return 0
+
+    entry["ttl"] = args.duration
+    entry["expires"] = _ttl_to_expires(args.duration)
+    store.write_entries(home, ns, entries, recipient)
+    print(style.ok(f"'{args.name}' expires {entry['expires']} "
+                   f"({_format_relative(entry['expires'])})"))
+    return 0
+
+
 def cmd_map(args):
     home, cfg, ns, _ = _resolve(args)
     namespace = cfg.namespaces.get(ns, config.Namespace())

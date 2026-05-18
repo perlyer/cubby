@@ -84,6 +84,13 @@ def build_parser() -> argparse.ArgumentParser:
                           help="set/replace the expiry (h/d/w), or 'none' to clear")
     p_rotate.set_defaults(func=commands.cmd_rotate)
 
+    p_ttl = sub.add_parser("ttl", help="show or change secret expiry")
+    p_ttl.add_argument("name", nargs="?", default=None, help="secret name")
+    p_ttl.add_argument("duration", nargs="?", default=None,
+                       help="duration (h/d/w), or 'none' to clear the expiry")
+    p_ttl.add_argument("-n", "--namespace", default=None, help="namespace to use")
+    p_ttl.set_defaults(func=commands.cmd_ttl)
+
     p_run = sub.add_parser("run", help="run a command with namespace secrets in its env")
     p_run.add_argument("-n", "--namespace", default=None, help="namespace to use")
     p_run.add_argument("command", nargs=argparse.REMAINDER, help="the command to run, after --")
