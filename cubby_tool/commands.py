@@ -290,6 +290,14 @@ def cmd_get(args):
         audit.log_event(home, cfg.audit, "reveal", ns, args.name)
         print("WARNING: revealing secret plaintext to stdout", file=sys.stderr)
         print(entry["value"])
+    elif args.copy:
+        try:
+            _copy_to_clipboard(entry["value"])
+        except RuntimeError as e:
+            print(style.fail(str(e)), file=sys.stderr)
+            return 2
+        audit.log_event(home, cfg.audit, "copy", ns, args.name)
+        print(style.ok(f"copied '{args.name}' to clipboard"))
     else:
         namespace = cfg.namespaces.get(ns, config.Namespace())
         var = _resolve_env_var(namespace.env_map, args.name)
@@ -413,6 +421,18 @@ def _resolve_env_var(env_map: dict, secret_name: str) -> str:
     """The environment variable a secret is injected as: its env_map override,
     or the upper_snake default."""
     return env_map.get(secret_name, _env_var_name(secret_name))
+
+
+def _copy_to_clipboard(text: str) -> str:
+    """Copy `text` to the system clipboard via the first available tool.
+    Returns the tool name; raises RuntimeError if none is found."""
+    tools = [["pbcopy"], ["wl-copy"], ["xclip", "-selection", "clipboard"]]
+    for tool in tools:
+        if shutil.which(tool[0]):
+            subprocess.run(tool, input=text, text=True, check=True)
+            return tool[0]
+    raise RuntimeError("no clipboard tool found "
+                       "(install pbcopy, wl-copy, or xclip)")
 
 
 def _env_var_clash(env_map: dict, secret_names, target_var: str, this_secret: str):

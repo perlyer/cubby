@@ -60,7 +60,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_get = sub.add_parser("get", help="show secret metadata")
     p_get.add_argument("name", help="secret name")
     p_get.add_argument("-n", "--namespace", default=None, help="namespace to use")
-    p_get.add_argument("--reveal", action="store_true", help="print plaintext (humans only)")
+    get_out = p_get.add_mutually_exclusive_group()
+    get_out.add_argument("--reveal", action="store_true",
+                         help="print plaintext (humans only)")
+    get_out.add_argument("--copy", action="store_true",
+                         help="copy the value to the system clipboard")
     p_get.set_defaults(func=commands.cmd_get)
 
     p_list = sub.add_parser("list", help="list secret names")

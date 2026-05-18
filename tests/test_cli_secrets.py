@@ -1,6 +1,6 @@
 import getpass
 
-from cubby_tool import cli
+from cubby_tool import cli, commands, store
 
 
 def test_set_via_getpass_then_list(inited_home, monkeypatch, capsys):
@@ -130,3 +130,47 @@ def test_get_shows_never_when_no_ttl(inited_home, identity, recipient, capsys):
     assert cli.main(["get", "tok"]) == 0
     out = capsys.readouterr().out
     assert "expires:" in out and "never" in out
+
+
+def test_get_copy_copies_without_printing(inited_home, identity, recipient,
+                                          monkeypatch, capsys):
+    store.set_secret(inited_home, "test", "tok", "s3cret", identity, recipient)
+    copied = {}
+    monkeypatch.setattr(commands, "_copy_to_clipboard",
+                        lambda text: copied.setdefault("v", text) or "pbcopy")
+    assert cli.main(["get", "tok", "--copy"]) == 0
+    out = capsys.readouterr().out
+    assert copied["v"] == "s3cret"
+    assert "s3cret" not in out
+    assert "copied" in out
+
+
+def test_get_copy_no_tool_returns_2(inited_home, identity, recipient,
+                                    monkeypatch, capsys):
+    store.set_secret(inited_home, "test", "tok", "s3cret", identity, recipient)
+
+    def boom(text):
+        raise RuntimeError("no clipboard tool found")
+
+    monkeypatch.setattr(commands, "_copy_to_clipboard", boom)
+    assert cli.main(["get", "tok", "--copy"]) == 2
+
+
+def test_get_copy_and_reveal_together_is_an_error(inited_home, identity,
+                                                  recipient, capsys):
+    store.set_secret(inited_home, "test", "tok", "s3cret", identity, recipient)
+    import pytest
+    with pytest.raises(SystemExit):
+        cli.main(["get", "tok", "--copy", "--reveal"])
+
+
+def test_copy_to_clipboard_uses_first_available_tool(monkeypatch):
+    calls = {}
+    monkeypatch.setattr(commands.shutil, "which",
+                        lambda name: "/usr/bin/" + name if name == "pbcopy" else None)
+    monkeypatch.setattr(commands.subprocess, "run",
+                        lambda cmd, **kw: calls.update(cmd=cmd, text=kw.get("input")))
+    tool = commands._copy_to_clipboard("hello")
+    assert tool == "pbcopy"
+    assert calls["cmd"][0] == "pbcopy"
+    assert calls["text"] == "hello"

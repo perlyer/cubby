@@ -1,8 +1,9 @@
 """The opt-in audit log — a local record of when secret values leave the store.
 
-Only two events are recorded: `run` (a command was launched with the namespace's
-secrets in its environment) and `reveal` (a secret was printed via
-`cubby get --reveal`). Secret values are never written.
+Three events are recorded: `run` (a command was launched with the namespace's
+secrets in its environment), `reveal` (a secret was printed via
+`cubby get --reveal`), and `copy` (a secret value was copied to the clipboard
+via `cubby get --copy`). Secret values are never written.
 """
 
 from datetime import datetime, timezone
