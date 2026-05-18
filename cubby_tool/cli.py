@@ -118,6 +118,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_doctor = sub.add_parser("doctor", help="check the cubby installation for problems")
     p_doctor.set_defaults(func=commands.cmd_doctor)
 
+    p_audit = sub.add_parser("audit", help="show or manage the audit log")
+    p_audit.add_argument("--enable", action="store_true", help="turn on audit logging")
+    p_audit.add_argument("--disable", action="store_true", help="turn off audit logging")
+    p_audit.add_argument("--clear", action="store_true", help="erase the audit log")
+    p_audit.add_argument("--all", dest="show_all", action="store_true",
+                         help="show the whole log, not just the last 20 lines")
+    p_audit.set_defaults(func=commands.cmd_audit)
+
     return parser
 
 

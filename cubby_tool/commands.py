@@ -8,7 +8,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from cubby_tool import agents, config, keyring, store, style
+from cubby_tool import agents, audit, config, keyring, store, style
 
 
 def _resolve(args):
@@ -287,6 +287,7 @@ def cmd_get(args):
         return 4
     entry = entries[args.name]
     if args.reveal:
+        audit.log_event(home, cfg.audit, "reveal", ns, args.name)
         print("WARNING: revealing secret plaintext to stdout", file=sys.stderr)
         print(entry["value"])
     else:
@@ -443,6 +444,7 @@ def cmd_run(args):
             print(f"cubby: warning: secret '{name}' in namespace '{ns}' "
                   f"{_format_relative(entry['expires'])}", file=sys.stderr)
         child_env[_resolve_env_var(env_map, name)] = entry["value"]
+    audit.log_event(home, cfg.audit, "run", ns, " ".join(command))
     try:
         os.execvpe(command[0], command, child_env)
     except FileNotFoundError:
@@ -611,6 +613,9 @@ def cmd_doctor(args):
                     checks.append(("warn", f"namespace '{ns_name}': secret "
                                            f"'{name}' {_format_relative(entry['expires'])}"))
 
+    if cfg is not None and not cfg.audit:
+        checks.append(("warn", "audit logging is off "
+                               "(enable with cubby audit --enable)"))
 
     marks = {
         "ok": style.green(style.OK_MARK),
@@ -622,3 +627,35 @@ def cmd_doctor(args):
     summary = "all checks passed" if failed == 0 else f"{failed} check(s) failed"
     print(style.box(lines, title="cubby doctor", footer=summary))
     return 0 if failed == 0 else 2
+
+
+def cmd_audit(args):
+    home = config.get_home()
+    cfg = config.load_config(home)
+
+    if sum(bool(f) for f in (args.enable, args.disable, args.clear)) > 1:
+        print(style.fail("audit: --enable, --disable and --clear are "
+                         "mutually exclusive"), file=sys.stderr)
+        return 2
+
+    if args.enable or args.disable:
+        cfg.audit = bool(args.enable)
+        config.save_config(home, cfg)
+        print(style.ok(f"audit logging {'enabled' if cfg.audit else 'disabled'}"))
+        return 0
+
+    if args.clear:
+        if audit.clear_log(home):
+            print(style.ok("audit log cleared"))
+        else:
+            print(style.dim("audit log is already empty"))
+        return 0
+
+    lines = audit.read_log(home)
+    if not lines:
+        print(style.dim("no audit entries"))
+        return 0
+    shown = lines if args.show_all else lines[-20:]
+    footer = None if cfg.audit else "audit logging is currently off"
+    print(style.box([f" {ln}" for ln in shown], title="audit log", footer=footer))
+    return 0

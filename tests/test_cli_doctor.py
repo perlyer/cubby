@@ -1,6 +1,6 @@
 import getpass
 
-from cubby_tool import cli, config, store
+from cubby_tool import cli, config, store, audit
 
 
 def test_doctor_passes_on_a_healthy_store(inited_home, capsys):
@@ -56,3 +56,15 @@ def test_doctor_flags_expired_secret(inited_home, identity, recipient, capsys):
     out = capsys.readouterr().out
     assert "stale" in out and "expired" in out
     assert rc == 0  # an expired secret is a warning, not a failure
+
+
+def test_doctor_notes_audit_off(inited_home, capsys):
+    cli.main(["doctor"])
+    assert "audit logging is off" in capsys.readouterr().out
+
+
+def test_doctor_silent_when_audit_on(inited_home, capsys):
+    cli.main(["audit", "--enable"])
+    capsys.readouterr()
+    cli.main(["doctor"])
+    assert "audit logging is off" not in capsys.readouterr().out
