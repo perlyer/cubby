@@ -32,6 +32,7 @@ GROUPS = [
         ("rename", "rename a secret"),
         ("rotate", "replace a secret's value"),
         ("ttl", "show or change secret expiry"),
+        ("cp", "copy a secret to another namespace"),
     ]),
     ("namespaces", [
         ("ns", "manage namespaces"),

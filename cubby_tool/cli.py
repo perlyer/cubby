@@ -82,6 +82,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_rename.add_argument("-n", "--namespace", default=None, help="namespace to use")
     p_rename.set_defaults(func=commands.cmd_rename)
 
+    p_cp = sub.add_parser("cp", help="copy a secret to another namespace")
+    p_cp.add_argument("name", help="secret name")
+    p_cp.add_argument("dest", metavar="namespace", help="destination namespace")
+    p_cp.add_argument("-n", "--namespace", default=None,
+                      help="source namespace (default: the active one)")
+    p_cp.set_defaults(func=commands.cmd_cp)
+
     p_rotate = sub.add_parser("rotate", help="replace a secret's value")
     p_rotate.add_argument("name", help="secret name")
     p_rotate.add_argument("-n", "--namespace", default=None, help="namespace to use")

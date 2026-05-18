@@ -362,6 +362,49 @@ def cmd_rename(args):
     return 0
 
 
+def _copy_or_move(args, *, move: bool):
+    """Shared body for cmd_cp / cmd_mv. The active namespace is the source;
+    args.dest is the destination namespace."""
+    verb = "mv" if move else "cp"
+    home, cfg, ns, _ = _resolve(args)
+    if args.dest == ns:
+        print(style.fail(f"{verb}: source and destination are the same "
+                         f"namespace '{ns}' — use `cubby rename`"), file=sys.stderr)
+        return 4
+    if args.dest not in cfg.namespaces:
+        print(style.fail(f"{verb}: namespace '{args.dest}' not found"),
+              file=sys.stderr)
+        return 4
+    identity = keyring.load_identity(home, cfg.key_mode)
+    recipient = keyring.public_key(identity)
+    result = store.copy_secret(home, ns, args.dest, args.name, identity, recipient)
+    if result == "missing":
+        print(style.fail(f"{verb}: secret '{args.name}' not found in "
+                         f"namespace '{ns}'"), file=sys.stderr)
+        return 4
+    if result == "exists":
+        print(style.fail(f"{verb}: secret '{args.name}' already exists in "
+                         f"namespace '{args.dest}'"), file=sys.stderr)
+        return 4
+    if move:
+        store.delete_secret(home, ns, args.name, identity, recipient)
+    src_ns = cfg.namespaces.get(ns)
+    if src_ns is not None and args.name in src_ns.env_map:
+        if move:
+            cfg.namespaces[args.dest].env_map[args.name] = \
+                src_ns.env_map.pop(args.name)
+        else:
+            cfg.namespaces[args.dest].env_map[args.name] = src_ns.env_map[args.name]
+        config.save_config(home, cfg)
+    done = "moved" if move else "copied"
+    print(style.ok(f"{done} '{args.name}' from '{ns}' to '{args.dest}'"))
+    return 0
+
+
+def cmd_cp(args):
+    return _copy_or_move(args, move=False)
+
+
 def _env_var_name(secret_name: str) -> str:
     """Default environment-variable name for a secret: UPPER_SNAKE, no prefix."""
     return secret_name.upper().replace("-", "_")
