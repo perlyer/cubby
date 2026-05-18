@@ -606,6 +606,11 @@ def cmd_doctor(args):
                                            f"env var '{var}'"))
                 else:
                     seen[var] = name
+            for name, entry in entries.items():
+                if _is_expired(entry):
+                    checks.append(("warn", f"namespace '{ns_name}': secret "
+                                           f"'{name}' {_format_relative(entry['expires'])}"))
+
 
     marks = {
         "ok": style.green(style.OK_MARK),
