@@ -136,8 +136,12 @@ def test_get_copy_copies_without_printing(inited_home, identity, recipient,
                                           monkeypatch, capsys):
     store.set_secret(inited_home, "test", "tok", "s3cret", identity, recipient)
     copied = {}
-    monkeypatch.setattr(commands, "_copy_to_clipboard",
-                        lambda text: copied.setdefault("v", text) or "pbcopy")
+
+    def fake_copy(text):
+        copied["v"] = text
+        return "pbcopy"
+
+    monkeypatch.setattr(commands, "_copy_to_clipboard", fake_copy)
     assert cli.main(["get", "tok", "--copy"]) == 0
     out = capsys.readouterr().out
     assert copied["v"] == "s3cret"
