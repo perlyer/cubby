@@ -1,6 +1,7 @@
 import getpass
 
 from cubby_tool import cli, commands, store
+from cubby_tool.commands import secrets
 
 
 def test_set_via_getpass_then_list(inited_home, monkeypatch, capsys):
@@ -141,7 +142,7 @@ def test_get_copy_copies_without_printing(inited_home, identity, recipient,
         copied["v"] = text
         return "pbcopy"
 
-    monkeypatch.setattr(commands, "_copy_to_clipboard", fake_copy)
+    monkeypatch.setattr(secrets, "_copy_to_clipboard", fake_copy)
     assert cli.main(["get", "tok", "--copy"]) == 0
     out = capsys.readouterr().out
     assert copied["v"] == "s3cret"
@@ -156,7 +157,7 @@ def test_get_copy_no_tool_returns_2(inited_home, identity, recipient,
     def boom(text):
         raise RuntimeError("no clipboard tool found")
 
-    monkeypatch.setattr(commands, "_copy_to_clipboard", boom)
+    monkeypatch.setattr(secrets, "_copy_to_clipboard", boom)
     assert cli.main(["get", "tok", "--copy"]) == 2
 
 
@@ -170,11 +171,11 @@ def test_get_copy_and_reveal_together_is_an_error(inited_home, identity,
 
 def test_copy_to_clipboard_uses_first_available_tool(monkeypatch):
     calls = {}
-    monkeypatch.setattr(commands.shutil, "which",
+    monkeypatch.setattr(secrets.shutil, "which",
                         lambda name: "/usr/bin/" + name if name == "pbcopy" else None)
-    monkeypatch.setattr(commands.subprocess, "run",
+    monkeypatch.setattr(secrets.subprocess, "run",
                         lambda cmd, **kw: calls.update(cmd=cmd, text=kw.get("input")))
-    tool = commands._copy_to_clipboard("hello")
+    tool = secrets._copy_to_clipboard("hello")
     assert tool == "pbcopy"
     assert calls["cmd"][0] == "pbcopy"
     assert calls["text"] == "hello"

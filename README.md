@@ -74,6 +74,16 @@ This puts the `cubby` command on your `PATH` (the distribution is named
 <agent>` for that, or use the `git clone` + `./install.sh` flow above, which does
 it for you.
 
+### Homebrew
+
+```bash
+brew install perlyer/cubby/cubby
+```
+
+Installs the `cubby` command (and `age`, its one external dependency). Like the
+PyPI install, this does not set up the AI-agent integration — run
+`cubby agent add <agent>` for that.
+
 ## Updating
 
 ```bash

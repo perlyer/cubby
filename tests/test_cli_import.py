@@ -2,34 +2,35 @@ import json
 
 import pytest
 
-from cubby_tool import cli, commands, store
+from cubby_tool import cli, store
+from cubby_tool.commands import importing
 
 
 def test_parse_env_file(tmp_path):
     env = tmp_path / ".env"
     env.write_text('# comment\nDB_HOST=localhost\nTOKEN="abc 123"\n\nEMPTY=\n')
-    parsed = commands._parse_env_file(env)
+    parsed = importing._parse_env_file(env)
     assert parsed == {"DB_HOST": "localhost", "TOKEN": "abc 123", "EMPTY": ""}
 
 
 def test_parse_json_file_flat(tmp_path):
     f = tmp_path / "s.json"
     f.write_text('{"A": "1", "B": 2}')
-    assert commands._parse_json_file(f) == {"A": "1", "B": "2"}
+    assert importing._parse_json_file(f) == {"A": "1", "B": "2"}
 
 
 def test_parse_json_file_rejects_non_object(tmp_path):
     f = tmp_path / "s.json"
     f.write_text('["a", "b"]')
     with pytest.raises(ValueError):
-        commands._parse_json_file(f)
+        importing._parse_json_file(f)
 
 
 def test_parse_json_file_rejects_nested_value(tmp_path):
     f = tmp_path / "s.json"
     f.write_text('{"A": {"nested": 1}}')
     with pytest.raises(ValueError):
-        commands._parse_json_file(f)
+        importing._parse_json_file(f)
 
 
 def test_import_dotenv(inited_home, tmp_path, identity, capsys):
@@ -99,7 +100,7 @@ def test_fetch_1password_picks_password_field(monkeypatch):
         return r
 
     monkeypatch.setattr(sp, "run", fake_run)
-    assert commands._fetch_1password("Personal") == {"GitHub": "pw"}
+    assert importing._fetch_1password("Personal") == {"GitHub": "pw"}
 
 
 def test_fetch_1password_concealed_fallback_and_skip(monkeypatch):
@@ -135,6 +136,6 @@ def test_fetch_1password_concealed_fallback_and_skip(monkeypatch):
         return r
 
     monkeypatch.setattr(sp, "run", fake_run)
-    result = commands._fetch_1password("Work")
+    result = importing._fetch_1password("Work")
     assert result == {"ApiToken": "secret-token"}
     assert "Notes" not in result
