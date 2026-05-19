@@ -11,7 +11,7 @@ secrets reach the command, never the agent's context.**
 
 <br>
 
-![cubby in action](assets/demo.gif)
+![cubby in action](https://raw.githubusercontent.com/perlyer/cubby/main/assets/demo.gif)
 
 </div>
 
