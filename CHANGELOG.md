@@ -4,6 +4,18 @@ All notable changes to `cubby` are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## [0.8.0] — 2026-05-19
+
+### Added
+- A Homebrew formula — `brew install perlyer/cubby/cubby` (via the
+  `perlyer/homebrew-cubby` tap).
+- Automated PyPI publishing — a GitHub Release now builds and publishes
+  `cubby-secrets` automatically, via PyPI Trusted Publishing (no stored token).
+
+### Changed
+- Internal: `commands.py` was reorganised into a `commands/` package of focused
+  modules. No behaviour change.
+
 ## [0.7.0] — 2026-05-18
 
 ### Added
@@ -134,6 +146,7 @@ First release.
 - Claude Code plugin marketplace manifest for native `/plugin` installation.
 - Two key-storage modes: an `0600` identity file, or the macOS login Keychain.
 
+[0.8.0]: https://github.com/perlyer/cubby/releases/tag/v0.8.0
 [0.7.0]: https://github.com/perlyer/cubby/releases/tag/v0.7.0
 [0.1.0]: https://github.com/perlyer/cubby/releases/tag/v0.1.0
 [0.2.0]: https://github.com/perlyer/cubby/releases/tag/v0.2.0
